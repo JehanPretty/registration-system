@@ -1,0 +1,1475 @@
+{
+  "NCR (Metro Manila)": {
+    "Metro Manila": {
+      "Manila": {
+        "Binondo": "1006",
+        "Ermita": "1000",
+        "Intramuros": "1002",
+        "Malate": "1004",
+        "Paco": "1007",
+        "Pandacan": "1011",
+        "Port Area": "1018",
+        "Quiapo": "1001",
+        "Sampaloc": "1008",
+        "San Andres": "1015",
+        "San Miguel": "1005",
+        "San Nicolas": "1010",
+        "Santa Ana": "1009",
+        "Santa Cruz": "1003",
+        "Santa Mesa": "1016",
+        "Tondo": "1012"
+      },
+      "Quezon City": {
+        "Bagong Pag-asa": "1105",
+        "Bagumbayan": "1110",
+        "Batasan Hills": "1126",
+        "Commonwealth": "1121",
+        "Cubao": "1109",
+        "Diliman": "1101",
+        "Fairview": "1118",
+        "Holy Spirit": "1127",
+        "Kamuning": "1103",
+        "Loyola Heights": "1108",
+        "Novaliches": "1123",
+        "Project 4": "1109",
+        "Sauyo": "1116",
+        "Teachers Village": "1101"
+      },
+      "Caloocan": {
+        "Bagong Silang": "1428",
+        "Barangay 1": "1400",
+        "Camarin": "1422",
+        "Grace Park": "1403",
+        "Sangandaan": "1410"
+      },
+      "Las Pi\u00f1as": {
+        "Almanza Uno": "1750",
+        "BF Homes": "1740",
+        "Pamplona Tres": "1750",
+        "Pulang Lupa Uno": "1740",
+        "Talon Dos": "1741"
+      },
+      "Makati": {
+        "Ayala Alabang": "1226",
+        "Bel-Air": "1209",
+        "Forbes Park": "1220",
+        "Magallanes": "1232",
+        "Poblacion": "1210",
+        "Salcedo Village": "1227",
+        "San Antonio": "1203",
+        "San Lorenzo": "1223"
+      },
+      "Malabon": {
+        "Acacia": "1470",
+        "Catmon": "1470",
+        "Hulong Duhat": "1470",
+        "Longos": "1470",
+        "Tinajeros": "1470"
+      },
+      "Mandaluyong": {
+        "Addition Hills": "1550",
+        "Barangka": "1550",
+        "Highway Hills": "1550",
+        "Plainview": "1550",
+        "Wack-Wack": "1555"
+      },
+      "Marikina": {
+        "Concepcion Uno": "1810",
+        "Industrial Valley": "1810",
+        "Kamias": "1810",
+        "Nangka": "1810",
+        "Parang": "1809",
+        "Sto. Ni\u00f1o": "1811"
+      },
+      "Muntinlupa": {
+        "Alabang": "1780",
+        "Ayala Alabang": "1780",
+        "Buli": "1776",
+        "Cupang": "1770",
+        "Putatan": "1772",
+        "Sucat": "1773",
+        "Tunasan": "1774"
+      },
+      "Navotas": {
+        "Bagumbayan North": "1485",
+        "Daanghari": "1485",
+        "Northbay Boulevard": "1485",
+        "San Jose": "1485",
+        "Sipac-Almacen": "1485"
+      },
+      "Para\u00f1aque": {
+        "Baclaran": "1702",
+        "BF Homes": "1720",
+        "Don Bosco": "1711",
+        "La Huerta": "1700",
+        "Moonwalk": "1709",
+        "San Antonio": "1708",
+        "San Dionisio": "1706",
+        "San Isidro": "1700",
+        "San Martin de Porres": "1701",
+        "Tambo": "1703"
+      },
+      "Pasay": {
+        "Barangay 1": "1300",
+        "Don Bosco": "1310",
+        "Malibay": "1300",
+        "Pasay Rotonda": "1300",
+        "San Isidro": "1300"
+      },
+      "Pasig": {
+        "Bagong Ilog": "1600",
+        "Kapasigan": "1600",
+        "Kapitolyo": "1603",
+        "Ortigas Center": "1600",
+        "Pinagbuhatan": "1600",
+        "San Antonio": "1604",
+        "Ugong": "1604"
+      },
+      "Pateros": {
+        "Aguho": "1620",
+        "Magtanggol": "1620",
+        "Poblacion": "1620",
+        "Santa Ana": "1620",
+        "Tuktukan": "1620"
+      },
+      "San Juan": {
+        "Addition Hills": "1500",
+        "Batis": "1500",
+        "Corazon de Jesus": "1500",
+        "Halo-Halo": "1500",
+        "Little Baguio": "1500",
+        "Salapan": "1500"
+      },
+      "Taguig": {
+        "BGC (Bonifacio Global City)": "1634",
+        "Hagonoy": "1630",
+        "Ligid-Tipas": "1630",
+        "Lower Bicutan": "1630",
+        "Signal Village": "1632",
+        "Ususan": "1630",
+        "Western Bicutan": "1630"
+      },
+      "Valenzuela": {
+        "Arkong Bato": "1444",
+        "Balangay": "1445",
+        "Gen. T. de Leon": "1440",
+        "Lingunan": "1445",
+        "Maysan": "1442",
+        "Poblacion": "1440",
+        "Rincon": "1440"
+      }
+    }
+  },
+  "CAR (Cordillera Administrative Region)": {
+    "Abra": {
+      "Bangued": {
+        "Bangued Poblacion": "2800",
+        "Cosili": "2800",
+        "Lingay": "2800"
+      },
+      "Bucay": {
+        "Bucay Poblacion": "2806",
+        "Paz": "2806"
+      }
+    },
+    "Apayao": {
+      "Kabugao": {
+        "Kabugao Poblacion": "3807",
+        "Calanasan": "3807"
+      }
+    },
+    "Benguet": {
+      "Baguio City": {
+        "Burnham Park Area": "2600",
+        "Camp 7": "2600",
+        "Fairview": "2600",
+        "Itogon": "2603",
+        "Loakan": "2600",
+        "Pacdal": "2600",
+        "Session Road Area": "2600",
+        "Trancoville": "2600"
+      },
+      "La Trinidad": {
+        "Balili": "2601",
+        "Betag": "2601",
+        "Poblacion": "2601",
+        "Shilan": "2601"
+      }
+    },
+    "Ifugao": {
+      "Lagawe": {
+        "Lagawe Poblacion": "3600",
+        "Burnay": "3600"
+      },
+      "Banaue": {
+        "Banaue Poblacion": "3601",
+        "Batad": "3601"
+      }
+    },
+    "Kalinga": {
+      "Tabuk City": {
+        "Bulanao": "3800",
+        "Poblacion West": "3800",
+        "San Julian": "3800"
+      }
+    },
+    "Mountain Province": {
+      "Bontoc": {
+        "Bontoc Ili": "2616",
+        "Poblacion": "2616"
+      },
+      "Sagada": {
+        "Sagada Poblacion": "2619",
+        "Ambasing": "2619"
+      }
+    }
+  },
+  "Region I (Ilocos Region)": {
+    "Ilocos Norte": {
+      "Laoag City": {
+        "Barangay 1": "2900",
+        "Brgy. 18 (Pob.)": "2900",
+        "San Nicolas": "2900",
+        "Solsona": "2905",
+        "Suyo": "2907"
+      },
+      "Batac City": {
+        "Barangay 1": "2906",
+        "Quiling Norte": "2906"
+      },
+      "Marcos": {
+        "Marcos Poblacion": "2904"
+      },
+      "Pagudpud": {
+        "Bangui": "2919",
+        "Saud": "2919"
+      }
+    },
+    "Ilocos Sur": {
+      "Vigan City": {
+        "Barangay I": "2700",
+        "Barangay V": "2700",
+        "Caoayan": "2700",
+        "Mindoro": "2700",
+        "Tamag": "2700"
+      },
+      "Candon City": {
+        "Candon Poblacion": "2710",
+        "Darapidap": "2710"
+      },
+      "Narvacan": {
+        "Sulvec": "2713",
+        "Paratong": "2713"
+      }
+    },
+    "La Union": {
+      "San Fernando City": {
+        "Barangay I": "2500",
+        "Barangay II": "2500",
+        "Catbangen": "2500",
+        "Pagdalagan Sur": "2500",
+        "Sevilla": "2500"
+      },
+      "Agoo": {
+        "Agoo Poblacion": "2504",
+        "San Isidro": "2504"
+      },
+      "San Juan": {
+        "Urbiztondo": "2514",
+        "Rabon": "2514"
+      }
+    },
+    "Pangasinan": {
+      "Dagupan City": {
+        "Bacayao Norte": "2400",
+        "Bacayao Sur": "2400",
+        "Bonuan Binloc": "2400",
+        "Bonuan Boquig": "2400",
+        "Calmay": "2400",
+        "Pantal": "2400",
+        "Tapuac": "2400"
+      },
+      "San Carlos City": {
+        "Barangay I": "2420",
+        "Cobol": "2420",
+        "Telbang": "2420"
+      },
+      "Urdaneta City": {
+        "Urdaneta Poblacion": "2428",
+        "Nancayasan": "2428"
+      },
+      "Alaminos City": {
+        "Poblacion": "2404",
+        "Telbang": "2404"
+      },
+      "Lingayen": {
+        "Lingayen Poblacion": "2401",
+        "Maniboc": "2401"
+      }
+    }
+  },
+  "Region II (Cagayan Valley)": {
+    "Batanes": {
+      "Basco": {
+        "Basco Poblacion": "3900",
+        "Chanarian": "3900"
+      },
+      "Itbayat": {
+        "San Rafael": "3904"
+      }
+    },
+    "Cagayan": {
+      "Tuguegarao City": {
+        "Annafunan East": "3500",
+        "Annafunan West": "3500",
+        "Atulayan Norte": "3500",
+        "Buntun": "3500",
+        "Centro 1": "3500",
+        "Gosi Sur": "3500",
+        "Larion Alto": "3500",
+        "Linao East": "3500",
+        "Ugac Norte": "3500"
+      },
+      "Aparri": {
+        "Poblacion": "3515",
+        "Maura": "3515"
+      },
+      "Gonzaga": {
+        "Gonzaga Poblacion": "3512"
+      },
+      "Lallo": {
+        "Lallo Poblacion": "3509"
+      }
+    },
+    "Isabela": {
+      "Ilagan City": {
+        "Alibago": "3300",
+        "Baligatan": "3300",
+        "Calamagui West": "3300",
+        "Imelda": "3300",
+        "San Vicente": "3300"
+      },
+      "Cauayan City": {
+        "Calamagui East": "3305",
+        "District I": "3305",
+        "District II": "3305"
+      },
+      "Santiago City": {
+        "District I": "3311",
+        "District II": "3311",
+        "Dubinan West": "3311"
+      }
+    },
+    "Nueva Vizcaya": {
+      "Bayombong": {
+        "Bayombong Poblacion": "3700",
+        "Ipil-Ipil": "3700",
+        "Salvacion": "3700"
+      },
+      "Solano": {
+        "Solano Poblacion": "3709",
+        "Baretbet": "3709"
+      }
+    },
+    "Quirino": {
+      "Cabarroguis": {
+        "Cabarroguis Poblacion": "3400",
+        "Banuar": "3400"
+      }
+    }
+  },
+  "Region III (Central Luzon)": {
+    "Aurora": {
+      "Baler": {
+        "Baler Poblacion": "3200",
+        "Buhangin": "3200",
+        "Reserva": "3200"
+      },
+      "Casiguran": {
+        "Casiguran Poblacion": "3204"
+      }
+    },
+    "Bataan": {
+      "Balanga City": {
+        "Balanga Poblacion": "2100",
+        "Cabog-Cabog": "2100",
+        "Cataning": "2100",
+        "Ibayo": "2100",
+        "Puerto Rivas": "2100"
+      },
+      "Mariveles": {
+        "Mariveles Poblacion": "2105",
+        "Cabcaben": "2105"
+      },
+      "Orani": {
+        "Orani Poblacion": "2112",
+        "San Vicente": "2112"
+      }
+    },
+    "Bulacan": {
+      "Malolos City": {
+        "Babatnin": "3000",
+        "Bulihan": "3000",
+        "Caniogan": "3000",
+        "Mojon": "3000",
+        "Panasahan": "3000",
+        "Sumapang Matanda": "3000",
+        "Tikay": "3000"
+      },
+      "Meycauayan City": {
+        "Bagong Bayan": "3020",
+        "Calvario": "3020",
+        "Jasaan": "3020"
+      },
+      "San Jose del Monte City": {
+        "Bagong Buhay": "3023",
+        "Dulong Bayan": "3023",
+        "Kaybanban": "3023"
+      },
+      "Bocaue": {
+        "Bocaue Poblacion": "3018",
+        "Mapalad": "3018"
+      },
+      "Calumpit": {
+        "Calumpit Poblacion": "3003",
+        "Gatbuca": "3003"
+      }
+    },
+    "Nueva Ecija": {
+      "Palayan City": {
+        "Palayan Poblacion": "3132",
+        "Atate": "3132"
+      },
+      "Cabanatuan City": {
+        "Bangad": "3100",
+        "Kapitan Pepe": "3100",
+        "Lourdes": "3100",
+        "Mabini Extension": "3100",
+        "Pag-Asa": "3100",
+        "Valle Cruz": "3100"
+      },
+      "San Jose City": {
+        "Poblacion": "3121",
+        "Santa Rita": "3121"
+      },
+      "Gapan City": {
+        "Gapan Poblacion": "3105",
+        "San Lorenzo": "3105"
+      },
+      "Mu\u00f1oz": {
+        "Mu\u00f1oz Poblacion": "3119"
+      }
+    },
+    "Pampanga": {
+      "Angeles City": {
+        "Anunas": "2009",
+        "Balibago": "2009",
+        "Cutcut": "2009",
+        "Lourdes Northwest": "2009",
+        "Malabanias": "2009",
+        "Pulung Maragul": "2009",
+        "Salapungan": "2009",
+        "Virgen delos Remedios": "2009"
+      },
+      "San Fernando City": {
+        "Bacolor": "2001",
+        "Calulut": "2000",
+        "Dela Paz Norte": "2000",
+        "Dolores": "2000",
+        "Lourdes": "2000",
+        "Maimpis": "2000",
+        "San Agustin": "2000",
+        "Santa Teresita": "2000"
+      },
+      "Mabalacat City": {
+        "Dau": "2010",
+        "Mabalacat Poblacion": "2010",
+        "Sapang Bato": "2010"
+      }
+    },
+    "Tarlac": {
+      "Tarlac City": {
+        "Aguso": "2300",
+        "Barangay 9 (Poblacion)": "2300",
+        "Laoac": "2300",
+        "Ligtasan": "2300",
+        "Maliwalo": "2300",
+        "Paraiso": "2300",
+        "San Roque": "2300"
+      },
+      "Capas": {
+        "Capas Poblacion": "2315",
+        "Sta. Juliana": "2315"
+      },
+      "Concepcion": {
+        "Concepcion Poblacion": "2316"
+      }
+    },
+    "Zambales": {
+      "Olongapo City": {
+        "Barretto": "2200",
+        "Barreto": "2200",
+        "East Bajac-Bajac": "2200",
+        "Gordon Heights": "2200",
+        "Kalaklan": "2200",
+        "New Cabalan": "2200",
+        "West Tapinac": "2200"
+      },
+      "Iba": {
+        "Iba Poblacion": "2201",
+        "Palanginan": "2201"
+      },
+      "San Antonio": {
+        "San Antonio Poblacion": "2212",
+        "Pundaquit": "2212"
+      },
+      "Subic": {
+        "Subic Poblacion": "2209",
+        "Calapacuan": "2209"
+      }
+    }
+  },
+  "Region IV-A (CALABARZON)": {
+    "Batangas": {
+      "Batangas City": {
+        "Balagtas": "4200",
+        "Bolbok": "4200",
+        "Cuta": "4200",
+        "Dela Paz Proper": "4200",
+        "Kumintang Ibaba": "4200",
+        "Pallocan Kanluran": "4200",
+        "Pallocan Silangan": "4200",
+        "San Isidro": "4200"
+      },
+      "Lipa City": {
+        "Ayala Tibig": "4217",
+        "Balagtas": "4217",
+        "Balintawak": "4217",
+        "Banay-Banay": "4217",
+        "Mabini Extension": "4217",
+        "Marawoy": "4217",
+        "Pinagkawitan": "4217",
+        "San Carlos": "4217"
+      },
+      "Tanauan City": {
+        "Tanauan Poblacion": "4232",
+        "Janopol": "4232",
+        "Sala": "4232"
+      },
+      "Sto. Tomas": {
+        "Sto. Tomas Poblacion": "4234",
+        "San Agustin": "4234"
+      }
+    },
+    "Cavite": {
+      "Cavite City": {
+        "Caridad Hills": "4100",
+        "Magdalo": "4100",
+        "Palico": "4100",
+        "Poblacion 1 (Baluarte)": "4100",
+        "San Antonio": "4100"
+      },
+      "Bacoor City": {
+        "Bayanan": "4102",
+        "Habay I": "4102",
+        "Ligas I": "4102",
+        "Mambog I": "4102",
+        "Molino I": "4102",
+        "Panapaan I": "4102",
+        "Queens Row Central": "4102"
+      },
+      "Dasmari\u00f1as City": {
+        "Burol I": "4114",
+        "Burol II": "4114",
+        "Langkaan I": "4114",
+        "Paliparan I": "4114",
+        "Salawag": "4114",
+        "Sampaloc I": "4114",
+        "Zone I (Pob.)": "4114"
+      },
+      "Imus City": {
+        "Anabu I-A": "4103",
+        "Buhay na Tubig": "4103",
+        "Bucandala I": "4103",
+        "Magdalo": "4103",
+        "Malagasang I-A": "4103",
+        "Tanzang Luma I": "4103"
+      },
+      "General Trias City": {
+        "Buenavista I": "4107",
+        "Santiago": "4107",
+        "Tejero": "4107"
+      },
+      "Tagaytay City": {
+        "Asisan": "4120",
+        "Calabuso": "4120",
+        "Silang Junction North": "4120"
+      }
+    },
+    "Laguna": {
+      "Calamba City": {
+        "Bagong Kalsada": "4027",
+        "Banlic": "4027",
+        "Canlubang": "4027",
+        "Implasan": "4027",
+        "Laguerta": "4027",
+        "Pansol": "4027",
+        "Real": "4027",
+        "San Cristobal": "4027"
+      },
+      "San Pablo City": {
+        "Barangay I": "4000",
+        "Barangay II": "4000",
+        "Bangyas": "4000",
+        "San Lucas I": "4000",
+        "Santa Catalina Norte": "4000"
+      },
+      "Santa Rosa City": {
+        "Balibago": "4026",
+        "Caingin": "4026",
+        "Don Jose": "4026",
+        "Ibaba": "4026",
+        "Labas": "4026",
+        "Macabling": "4026",
+        "Tagapo": "4026"
+      },
+      "Bi\u00f1an City": {
+        "Bi\u00f1an Poblacion": "4024",
+        "Canlalay": "4024",
+        "De La Paz": "4024",
+        "San Antonio": "4024",
+        "Santo Tomas": "4024"
+      },
+      "Los Ba\u00f1os": {
+        "Los Ba\u00f1os Poblacion": "4030",
+        "Batong Malake": "4030"
+      },
+      "Bay": {
+        "Bay Poblacion": "4033"
+      }
+    },
+    "Quezon": {
+      "Lucena City": {
+        "Barangay 1": "4301",
+        "Barangay 2": "4301",
+        "Dalahican": "4301",
+        "Domoit East": "4301",
+        "Ibabang Dupay": "4301",
+        "Ilayang Dupay": "4301",
+        "Market Area": "4301"
+      },
+      "Tayabas City": {
+        "Lakewood": "4327",
+        "San Isidro": "4327"
+      },
+      "Sariaya": {
+        "Sariaya Poblacion": "4322"
+      },
+      "Infanta": {
+        "Infanta Poblacion": "4336"
+      }
+    },
+    "Rizal": {
+      "Antipolo City": {
+        "Bagong Nayon": "1870",
+        "Beverly Hills": "1870",
+        "Dela Paz": "1870",
+        "Mambugan": "1870",
+        "San Isidro": "1870",
+        "San Jose": "1870",
+        "Ynares Center": "1870"
+      },
+      "Cainta": {
+        "Sto. Domingo": "1900",
+        "San Andres": "1900",
+        "Santolan": "1900"
+      },
+      "Taytay": {
+        "Dolores": "1920",
+        "San Juan": "1920",
+        "Sta. Ana": "1920"
+      },
+      "Binangonan": {
+        "Binangonan Poblacion": "1940",
+        "Calumpang": "1940"
+      }
+    }
+  },
+  "Region IV-B (MIMAROPA)": {
+    "Marinduque": {
+      "Boac": {
+        "Boac Poblacion": "4900",
+        "Balagasan": "4900"
+      },
+      "Santa Cruz": {
+        "Santa Cruz Poblacion": "4903"
+      }
+    },
+    "Occidental Mindoro": {
+      "Mamburao": {
+        "Mamburao Poblacion": "5106",
+        "Tayamaan": "5106"
+      },
+      "San Jose": {
+        "San Jose Poblacion": "5100",
+        "Sto. Ni\u00f1o": "5100"
+      }
+    },
+    "Oriental Mindoro": {
+      "Calapan City": {
+        "Balingasan": "5200",
+        "Ilaya": "5200",
+        "Ipil": "5200",
+        "Sta. Isabel": "5200"
+      },
+      "Puerto Galera": {
+        "Balatero": "5203",
+        "Poblacion": "5203",
+        "White Beach": "5203"
+      }
+    },
+    "Palawan": {
+      "Puerto Princesa City": {
+        "Bagong Silang": "5300",
+        "Bancao-Bancao": "5300",
+        "Irawan": "5300",
+        "Iwahig": "5300",
+        "Kalibo (St. Anthony)": "5300",
+        "Mangingisda": "5300",
+        "Sta. Monica": "5300"
+      },
+      "Coron": {
+        "Coron Poblacion": "5316"
+      },
+      "El Nido": {
+        "El Nido Poblacion": "5313",
+        "Corong-Corong": "5313"
+      }
+    },
+    "Romblon": {
+      "Romblon": {
+        "Romblon Poblacion": "5500",
+        "Agnipa": "5500"
+      }
+    }
+  },
+  "Region V (Bicol Region)": {
+    "Albay": {
+      "Legazpi City": {
+        "Bagumbayan": "4500",
+        "Bitano": "4500",
+        "Cabangan": "4500",
+        "Cemento": "4500",
+        "Gogon": "4500",
+        "Imperial Court Subd.": "4500",
+        "Kawit-East Washington": "4500",
+        "Pinaric": "4500"
+      },
+      "Tabaco City": {
+        "Baranggay 1": "4511",
+        "San Lorenzo": "4511"
+      },
+      "Ligao City": {
+        "Ligao Poblacion": "4504"
+      }
+    },
+    "Camarines Norte": {
+      "Daet": {
+        "Daet Poblacion": "4600",
+        "Alawihao": "4600",
+        "Lag-on": "4600"
+      },
+      "Jose Panganiban": {
+        "Jose Panganiban Poblacion": "4606"
+      }
+    },
+    "Camarines Sur": {
+      "Naga City": {
+        "Abella": "4400",
+        "Bagumbayan Norte": "4400",
+        "Calauag": "4400",
+        "Carolina": "4400",
+        "Concepcion Grande": "4400",
+        "Dayangdang": "4400",
+        "Del Rosario": "4400",
+        "Mabolo": "4400",
+        "Pacol": "4400",
+        "Pe\u00f1afrancia": "4400"
+      },
+      "Iriga City": {
+        "Iriga Poblacion": "4431",
+        "Sta. Elena": "4431"
+      },
+      "Pili": {
+        "Pili Poblacion": "4418",
+        "Tinangis": "4418"
+      }
+    },
+    "Catanduanes": {
+      "Virac": {
+        "Virac Poblacion": "4800",
+        "Baloctoc": "4800",
+        "Salvacion": "4800"
+      }
+    },
+    "Masbate": {
+      "Masbate City": {
+        "Bapor (Pob.)": "5400",
+        "Espinosa": "5400",
+        "Tugbo": "5400"
+      }
+    },
+    "Sorsogon": {
+      "Sorsogon City": {
+        "Balogo": "4700",
+        "Bibincahan": "4700",
+        "Buhatan": "4700",
+        "Cambulaga": "4700",
+        "Pangpang": "4700",
+        "Piot": "4700"
+      }
+    }
+  },
+  "Region VI (Western Visayas)": {
+    "Aklan": {
+      "Kalibo": {
+        "Kalibo Poblacion": "5600",
+        "Andagao": "5600",
+        "Linabuan Sur": "5600"
+      },
+      "Boracay (Malay)": {
+        "Balabag": "5608",
+        "Manoc-Manoc": "5608",
+        "Yapak": "5608"
+      }
+    },
+    "Antique": {
+      "San Jose de Buenavista": {
+        "San Jose Poblacion Barangay 1": "5700",
+        "Bulanao": "5700",
+        "Maybato Norte": "5700"
+      }
+    },
+    "Capiz": {
+      "Roxas City": {
+        "Poblacion (Roxas City)": "5800",
+        "Barangay Cogon": "5800",
+        "Culajao": "5800",
+        "Jones": "5800",
+        "Locojoy": "5800"
+      }
+    },
+    "Guimaras": {
+      "Jordan": {
+        "Jordan Poblacion": "5045",
+        "San Miguel": "5045"
+      },
+      "Nueva Valencia": {
+        "Nueva Valencia Poblacion": "5047"
+      }
+    },
+    "Iloilo": {
+      "Iloilo City": {
+        "Arevalo": "5000",
+        "Balantang": "5000",
+        "Boulevard": "5001",
+        "City Proper": "5000",
+        "Jaro": "5000",
+        "La Paz": "5000",
+        "Lapaz": "5001",
+        "Maasin": "5000",
+        "Mandurriao": "5000",
+        "Molo": "5000",
+        "Oton": "5000",
+        "Pavia": "5001"
+      },
+      "Passi City": {
+        "Passi Poblacion": "5037",
+        "Man-up": "5037"
+      },
+      "San Miguel": {
+        "San Miguel Poblacion": "5062"
+      }
+    },
+    "Negros Occidental": {
+      "Bacolod City": {
+        "Alijis": "6100",
+        "Bata": "6100",
+        "Estefania": "6100",
+        "Handumanan": "6100",
+        "Mandalagan": "6100",
+        "Mansilingan": "6100",
+        "Pahanocoy": "6100",
+        "Singcang-Airport": "6100",
+        "Taculing": "6100",
+        "Tangub": "6100",
+        "Villamonte": "6100"
+      },
+      "Silay City": {
+        "Silay Poblacion": "6116",
+        "El Ideal": "6116"
+      },
+      "San Carlos City": {
+        "San Carlos Poblacion": "6127"
+      },
+      "Victorias City": {
+        "Victorias Poblacion": "6119",
+        "Victorias District I": "6119"
+      }
+    }
+  },
+  "Region VII (Central Visayas)": {
+    "Bohol": {
+      "Tagbilaran City": {
+        "Bool": "6300",
+        "Booy": "6300",
+        "Dao": "6300",
+        "Manga": "6300",
+        "Mansasa": "6300",
+        "Poblacion I": "6300",
+        "Poblacion II": "6300",
+        "San Isidro": "6300",
+        "Taloto": "6300"
+      },
+      "Panglao": {
+        "Panglao Poblacion": "6340",
+        "Alona Beach": "6340",
+        "Doljo": "6340"
+      },
+      "Buenavista": {
+        "Buenavista Poblacion": "6315"
+      }
+    },
+    "Cebu": {
+      "Cebu City": {
+        "Apas": "6000",
+        "Banilad": "6000",
+        "Basak San Nicolas": "6000",
+        "Bugo": "6000",
+        "Calamba": "6000",
+        "Capitol Site": "6000",
+        "Guadalupe": "6000",
+        "Kamputhaw": "6000",
+        "Lahug": "6000",
+        "Lorega San Miguel": "6000",
+        "Luz": "6000",
+        "Mabolo": "6000",
+        "Mambaling": "6000",
+        "Pasil": "6000",
+        "Punta Princesa": "6000",
+        "Sambag I": "6000",
+        "Sambag II": "6000",
+        "San Antonio": "6000",
+        "Subangdaku": "6000",
+        "Talamban": "6000",
+        "Tisa": "6000"
+      },
+      "Lapu-Lapu City": {
+        "Agus": "6015",
+        "Basak": "6015",
+        "Buaya": "6015",
+        "Gun-ob": "6015",
+        "Looc": "6015",
+        "Maribago": "6015",
+        "Pajo": "6015",
+        "Pusok": "6015"
+      },
+      "Mandaue City": {
+        "Alang-Alang": "6014",
+        "Banilad": "6014",
+        "Centro": "6014",
+        "Guizo": "6014",
+        "Ibabao-Estancia": "6014",
+        "Jagobiao": "6014",
+        "Kauswagan": "6014",
+        "Looc": "6014",
+        "Paknaan": "6014",
+        "Tipolo": "6014"
+      },
+      "Talisay City": {
+        "Biasong": "6045",
+        "Cansojong": "6045",
+        "Dumlog": "6045",
+        "Lawaan I": "6045",
+        "San Roque": "6045"
+      },
+      "Toledo City": {
+        "Barangay I": "6038",
+        "Bunga": "6038",
+        "Poblacion": "6038"
+      },
+      "Danao City": {
+        "Danao Poblacion": "6004",
+        "Looc": "6004"
+      }
+    },
+    "Negros Oriental": {
+      "Dumaguete City": {
+        "Bagacay": "6200",
+        "Bajumpandan": "6200",
+        "Balugo": "6200",
+        "Bantayan": "6200",
+        "Batinguel": "6200",
+        "Daro": "6200",
+        "Junob": "6200",
+        "Looc": "6200",
+        "Mangnao-Guindahoan": "6200",
+        "Piapi": "6200",
+        "Poblacion No. 1": "6200",
+        "Tabuc-Tubig": "6200"
+      },
+      "Bayawan City": {
+        "Bayawan Poblacion": "6213"
+      },
+      "Tanjay City": {
+        "Tanjay Poblacion": "6204"
+      }
+    },
+    "Siquijor": {
+      "Siquijor": {
+        "Siquijor Poblacion": "6225",
+        "Caipilan": "6225"
+      },
+      "San Juan": {
+        "San Juan Poblacion": "6227"
+      }
+    }
+  },
+  "Region VIII (Eastern Visayas)": {
+    "Biliran": {
+      "Naval": {
+        "Naval Poblacion": "6543",
+        "Caibiran": "6543"
+      }
+    },
+    "Eastern Samar": {
+      "Borongan City": {
+        "Maypangdan": "6800",
+        "Barangay 1": "6800",
+        "San Roque": "6800"
+      }
+    },
+    "Leyte": {
+      "Tacloban City": {
+        "Abucay": "6500",
+        "Barangay 68": "6500",
+        "Barangay 77": "6500",
+        "Marasbaras": "6500",
+        "Nula-Tula": "6500",
+        "Palo": "6501",
+        "San Jose": "6500",
+        "Santo Ni\u00f1o": "6500"
+      },
+      "Baybay City": {
+        "Baybay Poblacion": "6521",
+        "Cogon": "6521"
+      },
+      "Ormoc City": {
+        "Batuan": "6541",
+        "Cogon Cogon": "6541",
+        "Lao": "6541",
+        "Poblacion": "6541"
+      }
+    },
+    "Northern Samar": {
+      "Catarman": {
+        "Catarman Poblacion": "6400",
+        "San Pedro": "6400"
+      }
+    },
+    "Samar": {
+      "Catbalogan City": {
+        "Barangay 1": "6700",
+        "Payao": "6700",
+        "San Pablo": "6700"
+      }
+    },
+    "Southern Leyte": {
+      "Maasin City": {
+        "Maasin Poblacion Barangay I": "6600",
+        "Abgao": "6600",
+        "Bontoc": "6600"
+      }
+    }
+  },
+  "Region IX (Zamboanga Peninsula)": {
+    "Zamboanga del Norte": {
+      "Dipolog City": {
+        "Biasong": "7100",
+        "Cogon": "7100",
+        "Estaka": "7100",
+        "Miputak": "7100",
+        "Olingan": "7100"
+      },
+      "Dapitan City": {
+        "Dapitan Poblacion": "7101",
+        "Bagting": "7101"
+      }
+    },
+    "Zamboanga del Sur": {
+      "Pagadian City": {
+        "Alegria": "7016",
+        "Balangasan": "7016",
+        "Baloyboan": "7016",
+        "Dao": "7016",
+        "Kawit": "7016",
+        "Sta. Lucia": "7016"
+      }
+    },
+    "Zamboanga Sibugay": {
+      "Ipil": {
+        "Ipil Poblacion": "7001",
+        "Taway": "7001"
+      }
+    },
+    "Zamboanga City": {
+      "Zamboanga City": {
+        "Arena Blanco": "7000",
+        "Baliwasan": "7000",
+        "Canelar": "7000",
+        "Cawa-Cawa": "7000",
+        "Guiwan": "7000",
+        "Limpapa": "7000",
+        "Mangusu": "7000",
+        "Pasonanca": "7000",
+        "Santa Maria": "7000",
+        "Tetuan": "7000",
+        "Zone I": "7000",
+        "Zone II": "7000"
+      }
+    }
+  },
+  "Region X (Northern Mindanao)": {
+    "Bukidnon": {
+      "Malaybalay City": {
+        "Aglayan": "8700",
+        "Casisang": "8700",
+        "Dalwangan": "8700",
+        "Linabo": "8700",
+        "Patpat": "8700",
+        "San Jose": "8700"
+      },
+      "Valencia City": {
+        "Valencia Poblacion": "8709",
+        "Bagontaas": "8709"
+      }
+    },
+    "Camiguin": {
+      "Mambajao": {
+        "Agoho": "9100",
+        "Binangawan": "9100",
+        "Mambajao Poblacion": "9100"
+      }
+    },
+    "Lanao del Norte": {
+      "Iligan City": {
+        "Del Carmen": "9200",
+        "Digkilaan": "9200",
+        "Hinaplanon": "9200",
+        "Pala-o": "9200",
+        "Poblacion": "9200",
+        "Saray-Tibanga": "9200",
+        "Suarez": "9200",
+        "Tomas L. Cabili": "9200"
+      }
+    },
+    "Misamis Occidental": {
+      "Oroquieta City": {
+        "Barangay I": "7207",
+        "Dohinob": "7207"
+      },
+      "Ozamiz City": {
+        "Banadero": "7200",
+        "Baybay": "7200",
+        "Dagobaan": "7200",
+        "Kinuman Norte": "7200"
+      },
+      "Tangub City": {
+        "Tangub Poblacion": "7214"
+      }
+    },
+    "Misamis Oriental": {
+      "Cagayan de Oro City": {
+        "Agusan Canyon": "9000",
+        "Balubal": "9000",
+        "Barangay 1": "9000",
+        "Bonbon": "9000",
+        "Bugo": "9000",
+        "Bulua": "9000",
+        "Carmen": "9000",
+        "Cugman": "9000",
+        "Canitoan": "9000",
+        "Gusa": "9000",
+        "Lapasan": "9000",
+        "Lumbia": "9000",
+        "Macabalan": "9000",
+        "Macasandig": "9000",
+        "Puntod": "9000",
+        "San Simon": "9000",
+        "Tablon": "9000",
+        "Tignapoloan": "9000",
+        "Tuburan": "9000"
+      },
+      "El Salvador City": {
+        "El Salvador Poblacion": "9017"
+      },
+      "Gingoog City": {
+        "Gingoog Poblacion": "9014",
+        "Kinawe": "9014"
+      }
+    }
+  },
+  "Region XI (Davao Region)": {
+    "Compostela Valley": {
+      "Nabunturan": {
+        "Nabunturan Poblacion": "8800",
+        "Quisao": "8800"
+      }
+    },
+    "Davao de Oro": {
+      "Nabunturan": {
+        "Nabunturan Pobl.": "8800",
+        "Mainit": "8800"
+      }
+    },
+    "Davao del Norte": {
+      "Tagum City": {
+        "Apokon": "8100",
+        "Bincungan": "8100",
+        "Canocotan": "8100",
+        "La Filipina": "8100",
+        "Liboganon": "8100",
+        "Madaum": "8100",
+        "Magdum": "8100",
+        "Visayan Village": "8100"
+      },
+      "Panabo City": {
+        "Cacao": "8105",
+        "New Visayas": "8105",
+        "Panabo Poblacion": "8105"
+      }
+    },
+    "Davao del Sur": {
+      "Digos City": {
+        "Aplaya": "8002",
+        "Dawis": "8002",
+        "Dulangan": "8002",
+        "Kalawag I": "8002",
+        "Poblacion": "8002"
+      }
+    },
+    "Davao City": {
+      "Davao City": {
+        "Agdao": "8000",
+        "Angliongto": "8000",
+        "Bajada": "8000",
+        "Bangkal": "8000",
+        "Buhangin": "8000",
+        "Bunawan": "8000",
+        "Cabantian": "8000",
+        "Calinan": "8000",
+        "Catalunan Grande": "8000",
+        "Catalunan Peque\u00f1o": "8000",
+        "Communal": "8000",
+        "Davao City Proper": "8000",
+        "Dumoy": "8000",
+        "Eden": "8000",
+        "Inayangan": "8000",
+        "Langub": "8000",
+        "Lizada": "8000",
+        "Ma-a": "8000",
+        "Maa": "8000",
+        "Matina Aplaya": "8000",
+        "Matina Crossing": "8000",
+        "Mintal": "8000",
+        "Panacan": "8000",
+        "Paquibato": "8000",
+        "Poblaacion": "8000",
+        "Sasa": "8000",
+        "Talomo": "8000",
+        "Tibungco": "8000",
+        "Toril": "8000",
+        "Tugbok": "8000",
+        "Ulas": "8000"
+      }
+    },
+    "Davao Occidental": {
+      "Malita": {
+        "Malita Poblacion": "8007"
+      }
+    },
+    "Davao Oriental": {
+      "Mati City": {
+        "Dahican": "8200",
+        "Mati Poblacion": "8200",
+        "Sainz": "8200"
+      }
+    }
+  },
+  "Region XII (SOCCSKSARGEN)": {
+    "Cotabato": {
+      "Kidapawan City": {
+        "Amas": "9400",
+        "Barangay Lanao": "9400",
+        "Ilomavis": "9400",
+        "Lanao": "9400",
+        "Poblacion": "9400"
+      },
+      "Midsayap": {
+        "Midsayap Poblacion": "9410",
+        "Kakar": "9410"
+      }
+    },
+    "Sarangani": {
+      "Alabel": {
+        "Alabel Poblacion": "9501",
+        "Alegria": "9501"
+      },
+      "General Santos City": {
+        "Apopong": "9500",
+        "Bula": "9500",
+        "Bulaong": "9500",
+        "City Heights": "9500",
+        "Conel": "9500",
+        "Dadiangas East": "9500",
+        "Dadiangas North": "9500",
+        "Labangal": "9500",
+        "Lagao (1st)": "9500",
+        "Marbel": "9500",
+        "Sinawal": "9500",
+        "Tinagacan": "9500"
+      }
+    },
+    "South Cotabato": {
+      "Koronadal City": {
+        "Assumption": "9506",
+        "Cacub": "9506",
+        "Carpenter Hill": "9506",
+        "Mabini": "9506",
+        "Zone I (Poblacion)": "9506"
+      },
+      "Polomolok": {
+        "Magsaysay": "9504",
+        "Poblacion": "9504"
+      },
+      "Tupi": {
+        "Tupi Poblacion": "9505"
+      }
+    },
+    "Sultan Kudarat": {
+      "Isulan": {
+        "Isulan Poblacion": "9801",
+        "Datu Windab": "9801"
+      },
+      "Tacurong City": {
+        "Barangay I": "9800",
+        "Liyaben": "9800"
+      }
+    }
+  },
+  "Region XIII (CARAGA)": {
+    "Agusan del Norte": {
+      "Butuan City": {
+        "Agao": "8600",
+        "Ampayon": "8600",
+        "Baan Riverside": "8600",
+        "Bayanihan": "8600",
+        "Libertad": "8600",
+        "Mahogany": "8600",
+        "Poroc": "8600",
+        "San Mateo": "8600",
+        "Villa Kananga": "8600"
+      },
+      "Cabadbaran City": {
+        "Cabadbaran Poblacion": "8605"
+      }
+    },
+    "Agusan del Sur": {
+      "Bayugan City": {
+        "Bayugan Poblacion": "8502"
+      },
+      "Prosperidad": {
+        "Poblacion": "8700",
+        "Magsaysay": "8700"
+      }
+    },
+    "Dinagat Islands": {
+      "San Jose (Dinagat)": {
+        "Poblacion": "8427"
+      }
+    },
+    "Surigao del Norte": {
+      "Surigao City": {
+        "Alegria": "8400",
+        "Barangay 1": "8400",
+        "Canlanipa": "8400",
+        "Lisong": "8400",
+        "Luna": "8400",
+        "Washington": "8400"
+      },
+      "Siargao (Dapa)": {
+        "Dapa Poblacion": "8417",
+        "General Luna": "8417"
+      }
+    },
+    "Surigao del Sur": {
+      "Bislig City": {
+        "Bislig Poblacion": "8311",
+        "Mangagoy": "8311"
+      },
+      "Tandag City": {
+        "Tandag Poblacion": "8300",
+        "Awasian": "8300"
+      }
+    }
+  },
+  "BARMM (Bangsamoro)": {
+    "Basilan": {
+      "Isabela City": {
+        "Isabela Poblacion": "7300",
+        "Sunrise Village": "7300"
+      }
+    },
+    "Lanao del Sur": {
+      "Marawi City": {
+        "Bacolod-Kalawi": "9700",
+        "Banga": "9700",
+        "Dansalan": "9700",
+        "East Basak": "9700",
+        "Lilod Saduc": "9700",
+        "Raya Madaya I": "9700"
+      }
+    },
+    "Maguindanao del Norte": {
+      "Cotabato City": {
+        "Bagua I": "9600",
+        "Bagua II": "9600",
+        "Kalanganan I": "9600",
+        "Poblacion I": "9600",
+        "Poblacion II": "9600",
+        "Rosary Heights I": "9600"
+      },
+      "Datu Odin Sinsuat": {
+        "Poblacion (Datu Odin Sinsuat)": "9605"
+      }
+    },
+    "Maguindanao del Sur": {
+      "Sultan Kudarat (Maguindanao)": {
+        "Poblacion": "9609"
+      }
+    },
+    "Sulu": {
+      "Jolo": {
+        "Jolo Poblacion": "7400",
+        "Asturias": "7400",
+        "Patikul": "7400"
+      }
+    },
+    "Tawi-Tawi": {
+      "Bongao": {
+        "Bongao Poblacion": "7500",
+        "Sumangat": "7500"
+      }
+    }
+  }
+}
