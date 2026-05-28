@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+.pytest_cache/
+
+# Virtualenv
+.venv/
+venv/
+
+# Logs
+*.log
+debug-*.log
+
+# Databases / local state
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads (user content)
+backend/uploads/
+
+# Scratch / dumps
+scratch/
+backend/scratch/
+*.txt
+db_dump.json
+migration_error.txt
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Expo
+.expo/
+.expo-shared/
+.expo_backup/
+frontend/dist/
+mobile/.expo/
+mobile/.expo_backup/
+

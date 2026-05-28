@@ -33,6 +33,9 @@ def get_id_template(role_name: str, db: Session = Depends(get_db)):
             "institution_name": "Global Institute",
             "institution_subtitle": "Empowering Excellence",
             "logo_url": "",
+            "header_color": "#ffffff",
+            "institution_color": "#ffffff",
+            "subtitle_color": "#ffffff",
             "header_font_size": 6,
             "institution_font_size": 10,
             "subtitle_font_size": 7,
@@ -43,7 +46,18 @@ def get_id_template(role_name: str, db: Session = Depends(get_db)):
             "back_content": "This card is the property of the issuing institution. If found, please return to the nearest security office.",
             "back_contact": "+1 (555) 000-0000",
             "show_barcode": True,
-            "signature_label": "Authorized Signature",
+            "signature_label": "University Registrar",
+            "custom_back_bg_url": "",
+            "authorized_name": "Registrar",
+            "authorized_signature_url": "",
+            "show_user_signature": True,
+            "custom_front_bg_url": "",
+            "name_color": "",
+            "role_color": "",
+            "id_number_color": "",
+            "name_font_size": 24.0,
+            "role_font_size": 10.0,
+            "id_number_font_size": 9.0,
             "background_type": "solid",
             "custom_bg_url": None,
             "updated_at": None
@@ -52,17 +66,23 @@ def get_id_template(role_name: str, db: Session = Depends(get_db)):
 
 @router.post("/save", response_model=IDTemplateRead)
 def save_id_template(template_data: IDTemplateCreate, db: Session = Depends(get_db)):
-    db_template = db.query(IDTemplate).filter(IDTemplate.role_name == template_data.role_name).first()
-    
-    if db_template:
-        # Update existing
-        for key, value in template_data.dict().items():
-            setattr(db_template, key, value)
-    else:
-        # Create new
-        db_template = IDTemplate(**template_data.dict())
-        db.add(db_template)
-    
-    db.commit()
-    db.refresh(db_template)
-    return db_template
+    try:
+        db_template = db.query(IDTemplate).filter(IDTemplate.role_name == template_data.role_name).first()
+        
+        if db_template:
+            # Update existing
+            for key, value in template_data.dict(exclude={'id', 'updated_at'}).items():
+                setattr(db_template, key, value)
+        else:
+            # Create new
+            db_template = IDTemplate(**template_data.dict())
+            db.add(db_template)
+        
+        db.commit()
+        db.refresh(db_template)
+        return db_template
+    except Exception as e:
+        import traceback
+        with open("scratch/save_err.log", "w") as f:
+            f.write(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))

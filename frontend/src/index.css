@@ -1,0 +1,212 @@
+@import "tailwindcss";
+@import "cropperjs/dist/cropper.css";
+
+@theme {
+  --color-brand-blue: #003366;
+  --font-heading: "Inter", sans-serif;
+}
+
+:root {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-sidebar: #1f2a56;
+  --bg-sidebar-hover: #2a376b;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-muted: rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  --bg-main: #0f172a;
+  --bg-card: #1e293b;
+  --bg-sidebar: #1e293b;
+  --bg-sidebar-hover: #334155;
+  --text-primary: #f1f5f9; /* Soft White */
+  --text-secondary: #cbd5e1; /* Softer White */
+  --text-muted: #94a3b8;
+  --border-muted: #334155;
+}
+
+/* Global Overrides for Dark Mode */
+.dark .bg-white:not(.print-mode):not(.print-mode *) { background-color: var(--bg-card) !important; }
+.dark .bg-slate-50:not(.print-mode):not(.print-mode *), .dark .bg-slate-100:not(.print-mode):not(.print-mode *) { background-color: rgba(255, 255, 255, 0.05) !important; }
+.dark .bg-slate-200:not(.print-mode):not(.print-mode *) { background-color: rgba(255, 255, 255, 0.1) !important; }
+
+/* Text Visibility Overrides - Robust Catch-all */
+.dark [class*="text-slate-"]:not(.print-mode):not(.print-mode *), 
+.dark [class*="text-gray-"]:not(.print-mode):not(.print-mode *), 
+.dark [class*="text-zinc-"]:not(.print-mode):not(.print-mode *),
+.dark [class*="text-neutral-"]:not(.print-mode):not(.print-mode *) { 
+  color: var(--text-secondary) !important; 
+}
+
+/* Primary text for darker shades and custom Hex codes */
+.dark [class*="text-slate-9"]:not(.print-mode):not(.print-mode *), .dark [class*="text-slate-8"]:not(.print-mode):not(.print-mode *), .dark [class*="text-slate-7"]:not(.print-mode):not(.print-mode *),
+.dark [class*="text-gray-9"]:not(.print-mode):not(.print-mode *), .dark [class*="text-gray-8"]:not(.print-mode):not(.print-mode *), .dark [class*="text-gray-7"]:not(.print-mode):not(.print-mode *),
+.dark [class*="text-zinc-9"]:not(.print-mode):not(.print-mode *), .dark [class*="text-zinc-8"]:not(.print-mode):not(.print-mode *),
+.dark [class*="text-[#1f2a56]"]:not(.print-mode):not(.print-mode *), .dark [class*="text-[#1a234b]"]:not(.print-mode):not(.print-mode *), .dark [class*="text-[#1f264d]"]:not(.print-mode):not(.print-mode *),
+.dark .text-black:not(.print-mode):not(.print-mode *), .dark .text-white:not(.print-mode):not(.print-mode *) { 
+  color: var(--text-primary) !important; 
+}
+
+/* Lucide Icon Visibility */
+.dark .lucide:not(.print-mode):not(.print-mode *) {
+  stroke: var(--text-secondary) !important;
+  stroke-width: 2.2px !important;
+}
+
+/* Border & Shadow */
+.dark [class*="border-slate-1"]:not(.print-mode):not(.print-mode *), .dark [class*="border-gray-1"]:not(.print-mode):not(.print-mode *), .dark [class*="border-zinc-1"]:not(.print-mode):not(.print-mode *) { 
+  border-color: var(--border-muted) !important; 
+}
+.dark .shadow-sm:not(.print-mode):not(.print-mode *), .dark .shadow-md:not(.print-mode):not(.print-mode *), .dark .shadow-lg:not(.print-mode):not(.print-mode *), .dark .shadow-xl:not(.print-mode):not(.print-mode *) { shadow: none !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important; }
+
+/* Interactive Elements */
+.dark input, .dark select, .dark textarea { background-color: #1e293b !important; color: white !important; border-color: #334155 !important; }
+.dark input::placeholder { color: #64748b !important; }
+.dark select option { background-color: #1e293b !important; color: white !important; }
+.dark [class*="bg-blue-50"], .dark [class*="bg-blue-100"] { background-color: rgba(59, 130, 246, 0.4) !important; }
+.dark [class*="bg-blue-50"] svg, .dark [class*="bg-blue-100"] svg { stroke: var(--text-primary) !important; }
+.dark .text-blue-400, .dark .text-blue-500, .dark .text-blue-600, .dark .text-blue-700, .dark .text-indigo-600 { color: #93c5fd !important; }
+.dark [class*="bg-emerald-50"], .dark [class*="bg-emerald-100"] { background-color: rgba(16, 185, 129, 0.15) !important; }
+.dark .text-emerald-400, .dark .text-emerald-500, .dark .text-emerald-600 { color: #34d399 !important; }
+.dark [class*="bg-amber-50"], .dark [class*="bg-amber-100"] { background-color: rgba(245, 158, 11, 0.15) !important; }
+.dark .text-amber-400, .dark .text-amber-500, .dark .text-amber-600 { color: #fbbf24 !important; }
+.dark [class*="bg-red-50"], .dark [class*="bg-red-100"] { background-color: rgba(239, 68, 68, 0.4) !important; }
+.dark [class*="bg-red-50"] svg, .dark [class*="bg-red-100"] svg { stroke: var(--text-primary) !important; }
+
+/* Custom Navy Overrides (Specific Hex Classes) */
+.dark .text-\[\#1f2a56\], .dark .text-\[\#1a234b\], .dark .text-\[\#1e293b\], .dark .text-\[\#1f264d\] { color: var(--text-primary) !important; }
+.dark .bg-\[\#f8fafc\], .dark .bg-\[\#f8faff\] { background-color: var(--bg-main) !important; }
+.dark .bg-\[\#1f2a56\], .dark .bg-\[\#1a234b\], .dark .bg-\[\#1f264d\] { background-color: var(--bg-sidebar) !important; border-color: var(--border-muted) !important; }
+
+/* Recharts / Chart Visibility */
+.dark .recharts-cartesian-grid-horizontal line, 
+.dark .recharts-cartesian-grid-vertical line { stroke: rgba(255, 255, 255, 0.1) !important; }
+.dark .recharts-text { fill: var(--text-secondary) !important; }
+.dark .recharts-legend-item-text { color: var(--text-secondary) !important; }
+.dark .recharts-tooltip-cursor { fill: rgba(255, 255, 255, 0.05) !important; }
+
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 12px; /* Apply global down-scaling for professional density */
+  overflow: hidden; /* This prevents the whole page from scrolling */
+}
+
+@keyframes scan {
+  0% { top: 10%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 90%; opacity: 0; }
+}
+
+@keyframes shake-subtle {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.shake-subtle {
+  animation: shake-subtle 0.3s ease-in-out;
+}
+
+/* ──────────────────────────────────────────────────────────
+   NO-DARK COMPONENT ISOLATION
+   Forces light-theme rendering regardless of global .dark mode.
+   Placed at the end for maximum CSS precedence.
+   ────────────────────────────────────────────────────────── */
+.no-dark, .dark .no-dark {
+  --bg-card: #ffffff !important;
+  --text-primary: #0f172a !important;
+  --text-secondary: #475569 !important;
+  --border-muted: rgba(0, 0, 0, 0.05) !important;
+  background-color: #ffffff !important;
+  /* Removed broad color: inherit to allow intentional light-on-dark text classes */
+}
+
+/* Force backgrounds to stay white/light unless explicitly overridden by a child bg class */
+.no-dark .bg-white, .dark .no-dark .bg-white { background-color: #ffffff !important; }
+.no-dark .bg-slate-50, .dark .no-dark .bg-slate-50 { background-color: #f8fafc !important; }
+
+/* Ensure white text (usually on navy backgrounds) STAYS white */
+.no-dark .text-white, .dark .no-dark .text-white { color: #ffffff !important; }
+.no-dark .text-slate-100, .dark .no-dark .text-slate-100 { color: #f1f5f9 !important; }
+
+/* Protect common ID card navy/dark colors from turning white in Dark Mode */
+.dark .no-dark .text-\[\#1a234b\],
+.dark .no-dark .text-\[\#1f2a56\],
+.dark .no-dark .text-\[\#1e293b\],
+.dark .no-dark .text-slate-900,
+.dark .no-dark .text-slate-800,
+.dark .no-dark .text-black,
+.dark .no-dark .text-indigo-950 {
+  color: #0f172a !important;
+}
+
+/* Allow opacity to work as intended for light-mode header styles */
+.dark .no-dark .opacity-60 { opacity: 0.6 !important; }
+.dark .no-dark .opacity-50 { opacity: 0.5 !important; }
+
+.no-dark *, .dark .no-dark * {
+  transition: none !important;
+}
+
+.no-dark .lucide, .dark .no-dark .lucide {
+  stroke: currentColor !important;
+  stroke-width: 2px !important;
+}
+
+
+
+@media print {
+  /* Hide everything by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Reset body wrapper styling */
+  html, body, #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Show only the print batch container */
+  #print-batch-container, #print-batch-container * {
+    visibility: visible;
+  }
+
+  #print-batch-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+  }
+
+  /* Format each card pair for a distinct page break */
+  .id-print-page {
+    page-break-after: always;
+    break-after: page;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 20px 0;
+  }
+
+  /* Force background colors and images for graphics */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

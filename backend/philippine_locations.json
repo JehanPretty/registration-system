@@ -42,7 +42,7 @@
         "Grace Park": "1403",
         "Sangandaan": "1410"
       },
-      "Las Pi\u00f1as": {
+      "Las Piñas": {
         "Almanza Uno": "1750",
         "BF Homes": "1740",
         "Pamplona Tres": "1750",
@@ -79,7 +79,7 @@
         "Kamias": "1810",
         "Nangka": "1810",
         "Parang": "1809",
-        "Sto. Ni\u00f1o": "1811"
+        "Sto. Niño": "1811"
       },
       "Muntinlupa": {
         "Alabang": "1780",
@@ -97,7 +97,7 @@
         "San Jose": "1485",
         "Sipac-Almacen": "1485"
       },
-      "Para\u00f1aque": {
+      "Parañaque": {
         "Baclaran": "1702",
         "BF Homes": "1720",
         "Don Bosco": "1711",
@@ -456,8 +456,8 @@
         "Gapan Poblacion": "3105",
         "San Lorenzo": "3105"
       },
-      "Mu\u00f1oz": {
-        "Mu\u00f1oz Poblacion": "3119"
+      "Muñoz": {
+        "Muñoz Poblacion": "3119"
       }
     },
     "Pampanga": {
@@ -578,7 +578,7 @@
         "Panapaan I": "4102",
         "Queens Row Central": "4102"
       },
-      "Dasmari\u00f1as City": {
+      "Dasmariñas City": {
         "Burol I": "4114",
         "Burol II": "4114",
         "Langkaan I": "4114",
@@ -633,15 +633,15 @@
         "Macabling": "4026",
         "Tagapo": "4026"
       },
-      "Bi\u00f1an City": {
-        "Bi\u00f1an Poblacion": "4024",
+      "Biñan City": {
+        "Biñan Poblacion": "4024",
         "Canlalay": "4024",
         "De La Paz": "4024",
         "San Antonio": "4024",
         "Santo Tomas": "4024"
       },
-      "Los Ba\u00f1os": {
-        "Los Ba\u00f1os Poblacion": "4030",
+      "Los Baños": {
+        "Los Baños Poblacion": "4030",
         "Batong Malake": "4030"
       },
       "Bay": {
@@ -712,7 +712,7 @@
       },
       "San Jose": {
         "San Jose Poblacion": "5100",
-        "Sto. Ni\u00f1o": "5100"
+        "Sto. Niño": "5100"
       }
     },
     "Oriental Mindoro": {
@@ -794,7 +794,7 @@
         "Del Rosario": "4400",
         "Mabolo": "4400",
         "Pacol": "4400",
-        "Pe\u00f1afrancia": "4400"
+        "Peñafrancia": "4400"
       },
       "Iriga City": {
         "Iriga Poblacion": "4431",
@@ -1058,7 +1058,7 @@
         "Nula-Tula": "6500",
         "Palo": "6501",
         "San Jose": "6500",
-        "Santo Ni\u00f1o": "6500"
+        "Santo Niño": "6500"
       },
       "Baybay City": {
         "Baybay Poblacion": "6521",
@@ -1269,7 +1269,7 @@
         "Cabantian": "8000",
         "Calinan": "8000",
         "Catalunan Grande": "8000",
-        "Catalunan Peque\u00f1o": "8000",
+        "Catalunan Pequeño": "8000",
         "Communal": "8000",
         "Davao City Proper": "8000",
         "Dumoy": "8000",
@@ -1431,13 +1431,137 @@
       }
     },
     "Lanao del Sur": {
+      "Amai Manabilang": {
+        "Poblacion": "9320"
+      },
+      "Bacolod-Kalawi": {
+        "Poblacion": "9316"
+      },
+      "Balabagan": {
+        "Poblacion": "9302"
+      },
+      "Balindong": {
+        "Poblacion": "9318"
+      },
+      "Bayang": {
+        "Poblacion": "9309"
+      },
+      "Binidayan": {
+        "Poblacion": "9310"
+      },
+      "Buadiposo-Buntong": {
+        "Poblacion": "9714"
+      },
+      "Bubong": {
+        "Poblacion": "9708"
+      },
+      "Butig": {
+        "Poblacion": "9305"
+      },
+      "Calanogas": {
+        "Poblacion": "9319"
+      },
+      "Ditsaan-Ramain": {
+        "Poblacion": "9713"
+      },
+      "Ganassi": {
+        "Poblacion": "9311"
+      },
+      "Kapai": {
+        "Poblacion": "9709"
+      },
+      "Kapatagan": {
+        "Poblacion": "9322"
+      },
+      "Lumba-Bayabao": {
+        "Poblacion": "9703"
+      },
+      "Lumbaca-Unayan": {
+        "Poblacion": "9308"
+      },
+      "Lumbatan": {
+        "Poblacion": "9307"
+      },
+      "Lumbayanague": {
+        "Poblacion": "9306"
+      },
+      "Macadar Andong": {
+        "Poblacion": "9308"
+      },
+      "Madalum": {
+        "Poblacion": "9315"
+      },
+      "Madamba": {
+        "Poblacion": "9314"
+      },
+      "Maguing": {
+        "Poblacion": "9715"
+      },
+      "Malabang": {
+        "Poblacion": "9300"
+      },
+      "Marantao": {
+        "Poblacion": "9711"
+      },
+      "Marogong": {
+        "Poblacion": "9303"
+      },
+      "Masiu": {
+        "Poblacion": "9706"
+      },
+      "Mulondo": {
+        "Poblacion": "9702"
+      },
+      "Pagayawan": {
+        "Poblacion": "9312"
+      },
+      "Pantar": {
+        "Poblacion": "9218"
+      },
+      "Piagapo": {
+        "Poblacion": "9710"
+      },
+      "Picong": {
+        "Poblacion": "9301"
+      },
+      "Poona Bayabao": {
+        "Poblacion": "9705"
+      },
+      "Pualas": {
+        "Poblacion": "9313"
+      },
+      "Saguiaran": {
+        "Poblacion": "9701"
+      },
+      "Sultan Dumalondong": {
+        "Poblacion": "9324"
+      },
+      "Tagoloan II": {
+        "Poblacion": "9321"
+      },
+      "Tamparan": {
+        "Poblacion": "9704"
+      },
+      "Taraka": {
+        "Poblacion": "9712"
+      },
+      "Tubaran": {
+        "Poblacion": "9304"
+      },
+      "Tugaya": {
+        "Poblacion": "9317"
+      },
+      "Wao": {
+        "Poblacion": "9716"
+      },
       "Marawi City": {
         "Bacolod-Kalawi": "9700",
         "Banga": "9700",
         "Dansalan": "9700",
         "East Basak": "9700",
         "Lilod Saduc": "9700",
-        "Raya Madaya I": "9700"
+        "Raya Madaya I": "9700",
+        "Poblacion": "9700"
       }
     },
     "Maguindanao del Norte": {

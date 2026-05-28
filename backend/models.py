@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Float
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -13,7 +13,7 @@ class GlobalUser(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     global_id = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False)
-    external_id = Column(String, nullable=True, index=True)
+    external_id = Column(String, nullable=True, index=True, unique=True)
     source = Column(String, nullable=True)
     display_name = Column(String, nullable=True)
     name = Column(String, nullable=True)
@@ -34,6 +34,8 @@ class Role(Base):
     icon = Column(String, nullable=True)
     description = Column(String, nullable=True)
     email_domain = Column(String, nullable=True) # Domain mapping (e.g., student.com)
+    country_code = Column(String(2), default="PH") # ISO Country Code
+    institution_code = Column(String(5), default="GEN") # Institution Identifier
 
 
 class FormSection(Base):
@@ -79,11 +81,20 @@ class IDTemplate(Base):
     institution_name = Column(String, default="Global Institute")
     institution_subtitle = Column(String, default="Empowering Excellence")
     logo_url = Column(String, nullable=True)
-    # Font Sizes / Zoom
-    header_font_size = Column(Integer, default=6)
-    institution_font_size = Column(Integer, default=10)
-    subtitle_font_size = Column(Integer, default=7)
-    logo_size = Column(Integer, default=40) # Overall size in pixels/percent
+    header_color = Column(String, nullable=True)
+    institution_color = Column(String, nullable=True)
+    subtitle_color = Column(String, nullable=True)
+    name_color = Column(String, default="")
+    role_color = Column(String, default="")
+    id_number_color = Column(String, default="")
+    # Font Sizes / Zoom (Changed to Float for fine-grained control)
+    header_font_size = Column(Float, default=6.0) 
+    institution_font_size = Column(Float, default=10.0)
+    subtitle_font_size = Column(Float, default=7.0)
+    name_font_size = Column(Float, default=24.0) # Default 2xl
+    role_font_size = Column(Float, default=10.0) # Default [10px]
+    id_number_font_size = Column(Float, default=9.0) # Default [9px]
+    logo_size = Column(Integer, default=40) 
     # Front Elements
     show_qr = Column(Boolean, default=True)
     show_avatar = Column(Boolean, default=True)
@@ -99,6 +110,7 @@ class IDTemplate(Base):
     authorized_name = Column(String, default="Registrar")
     authorized_signature_url = Column(String, nullable=True)
     show_user_signature = Column(Boolean, default=True)
+    custom_front_bg_url = Column(String, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class SystemTheme(Base):
@@ -107,15 +119,37 @@ class SystemTheme(Base):
     primary_color = Column(String, default="#1a234b")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class SystemMaintenance(Base):
+    __tablename__ = "system_maintenance"
+    id = Column(Integer, primary_key=True, index=True)
+    last_purge_count = Column(Integer, default=0)
+    last_purge_at = Column(DateTime, default=datetime.utcnow)
+    is_notified = Column(Boolean, default=False)
+
 class IDApplication(Base):
     __tablename__ = "id_applications"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("global_user.id"))
+    template_id = Column(Integer, ForeignKey("id_templates.id"), nullable=True)
     status = Column(String, default="pending") # pending, approved, rejected, escalated
     submitted_at = Column(DateTime, default=datetime.utcnow)
     scheduled_at = Column(DateTime, nullable=True)
-    collection_location = Column(String, nullable=True, default="Registrar Office")
+    collection_location = Column(String, nullable=True)
+    fulfillment_method = Column(String, nullable=True, default=None) # "pickup", "delivery"
+    shipping_address = Column(String, nullable=True)
+    tracking_number = Column(String, nullable=True)
+    fee_paid = Column(Boolean, default=False)
     is_ready = Column(Boolean, default=False)
     has_arrived = Column(Boolean, default=False)
     admin_notes = Column(String, nullable=True)
+    claimed_at = Column(DateTime, nullable=True)
+    claimed_by = Column(String, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     user = relationship("GlobalUser")
+
+class IDSequence(Base):
+    __tablename__ = "id_sequences"
+    id = Column(Integer, primary_key=True, index=True)
+    institution_code = Column(String, index=True)
+    year_month = Column(String, index=True) # YYMM format
+    last_sequence = Column(Integer, default=0)

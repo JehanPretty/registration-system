@@ -18,6 +18,9 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class GoogleAuthRequest(BaseModel):
+    id_token: str
+
 class ChangePassword(BaseModel):
     user_id: int
     current_password: str
@@ -57,6 +60,8 @@ class RoleBase(BaseModel):
     icon: Optional[str] = None
     description: Optional[str] = None
     email_domain: Optional[str] = None
+    country_code: Optional[str] = "PH"
+    institution_code: Optional[str] = "GEN"
 
 
 class RoleCreate(RoleBase):
@@ -121,10 +126,19 @@ class IDTemplateBase(BaseModel):
     institution_name: Optional[str] = "Global Institute"
     institution_subtitle: Optional[str] = "Empowering Excellence"
     logo_url: Optional[str] = None
+    header_color: Optional[str] = None
+    institution_color: Optional[str] = None
+    subtitle_color: Optional[str] = None
+    name_color: Optional[str] = ""
+    role_color: Optional[str] = ""
+    id_number_color: Optional[str] = ""
     # Font Sizes / Zoom
-    header_font_size: Optional[int] = 6
-    institution_font_size: Optional[int] = 10
-    subtitle_font_size: Optional[int] = 7
+    header_font_size: Optional[float] = 6.0
+    institution_font_size: Optional[float] = 10.0
+    subtitle_font_size: Optional[float] = 7.0
+    name_font_size: Optional[float] = 24.0
+    role_font_size: Optional[float] = 10.0
+    id_number_font_size: Optional[float] = 9.0
     logo_size: Optional[int] = 40
     # Front Elements
     show_qr: Optional[bool] = True
@@ -141,6 +155,9 @@ class IDTemplateBase(BaseModel):
     authorized_name: Optional[str] = "Registrar"
     authorized_signature_url: Optional[str] = None
     show_user_signature: Optional[bool] = True
+    custom_front_bg_url: Optional[str] = None
+
+    model_config = {"extra": "allow"}
 
 class IDTemplateCreate(IDTemplateBase):
     pass
@@ -153,9 +170,14 @@ class IDTemplateRead(IDTemplateBase):
 # --- ID APPLICATION SCHEMAS ---
 class IDApplicationBase(BaseModel):
     user_id: int
+    template_id: Optional[int] = None
     status: Optional[str] = "pending"
     scheduled_at: Optional[datetime] = None
-    collection_location: Optional[str] = "Registrar Office"
+    collection_location: Optional[str] = None
+    fulfillment_method: Optional[str] = None
+    shipping_address: Optional[str] = None
+    tracking_number: Optional[str] = None
+    fee_paid: Optional[bool] = False
     is_ready: Optional[bool] = False
     has_arrived: Optional[bool] = False
     admin_notes: Optional[str] = None
@@ -167,13 +189,21 @@ class IDApplicationUpdate(BaseModel):
     status: Optional[str] = None
     scheduled_at: Optional[datetime] = None
     collection_location: Optional[str] = None
+    fulfillment_method: Optional[str] = None
+    shipping_address: Optional[str] = None
+    tracking_number: Optional[str] = None
+    fee_paid: Optional[bool] = None
     is_ready: Optional[bool] = None
     has_arrived: Optional[bool] = None
     admin_notes: Optional[str] = None
+    template_id: Optional[int] = None
 
 class IDApplicationRead(IDApplicationBase):
     id: int
     submitted_at: datetime
+    updated_at: Optional[datetime] = None
+    claimed_at: Optional[datetime] = None
+    claimed_by: Optional[str] = None
     user: Optional[UserRead] = None
     
     model_config = {"from_attributes": True}

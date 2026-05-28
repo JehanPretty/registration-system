@@ -13,8 +13,24 @@ CACHE = {
     "cities": {}
 }
 
-PH_LOCATIONS_FILE = "philippine_locations.json"
+BACKEND_DIR = os.path.join(os.path.dirname(__file__), "..")
+PH_LOCATIONS_FILE = os.path.join(BACKEND_DIR, "philippine_locations.json")
+COUNTRIES_FILE = os.path.join(BACKEND_DIR, "countries.json")
 PH_DATA = {}
+LOCAL_COUNTRIES: List[str] = []
+
+
+def _load_json_list(path: str) -> list:
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except (json.JSONDecodeError, OSError) as e:
+        print(f"Error loading {path}: {e}")
+        return []
+
 
 if os.path.exists(PH_LOCATIONS_FILE):
     try:
@@ -23,27 +39,57 @@ if os.path.exists(PH_LOCATIONS_FILE):
     except json.JSONDecodeError as e:
         print(f"Error loading {PH_LOCATIONS_FILE}: {e}")
         PH_DATA = {}
+else:
+    print(f"Warning: Philippine locations file not found at {PH_LOCATIONS_FILE}")
+
+LOCAL_COUNTRIES = sorted(_load_json_list(COUNTRIES_FILE), key=str.lower)
+if LOCAL_COUNTRIES and "Philippines" in LOCAL_COUNTRIES:
+    LOCAL_COUNTRIES = ["Philippines"] + [c for c in LOCAL_COUNTRIES if c != "Philippines"]
+elif not LOCAL_COUNTRIES:
+    LOCAL_COUNTRIES = ["Philippines", "United States", "United Kingdom", "Canada", "Australia"]
+    print(f"Warning: countries list not found at {COUNTRIES_FILE}, using minimal fallback")
+
+def normalize_name(name: str) -> str:
+    if not name:
+        return ""
+    # Handle common encoding issues and naming variants
+    name = name.lower()
+    name = name.replace("Ã±", "n").replace("ñ", "n")
+    name = name.replace(" city", "").replace("province of ", "").replace("municipality of ", "")
+    return name.strip()
 
 @router.get("/countries")
 async def get_countries():
     if CACHE["countries"]:
         return CACHE["countries"]
-    
+
+    # Prefer bundled list (works offline / when external APIs fail SSL)
+    if LOCAL_COUNTRIES:
+        CACHE["countries"] = LOCAL_COUNTRIES
+        return LOCAL_COUNTRIES
+
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=20.0) as client:
             resp = await client.get("https://restcountries.com/v3.1/all?fields=name")
+            resp.raise_for_status()
             data = resp.json()
             countries = sorted([c["name"]["common"] for c in data])
+            if "Philippines" in countries:
+                countries = ["Philippines"] + [c for c in countries if c != "Philippines"]
             CACHE["countries"] = countries
             return countries
     except Exception as e:
-        # Fallback
-        return ["Philippines", "United States", "United Kingdom", "Canada", "Australia"]
+        print(f"Could not fetch countries from API: {e}")
+        return LOCAL_COUNTRIES or ["Philippines"]
 
 @router.get("/states")
 async def get_states(country: str = Query(...)):
     if country == "Philippines":
-        return sorted(list(PH_DATA.keys()))
+        # Flatten all provinces from all regions
+        provinces = []
+        for region in PH_DATA:
+            provinces.extend(list(PH_DATA[region].keys()))
+        return sorted(list(set(provinces)))
     
     if country in CACHE["states"]:
         return CACHE["states"][country]
@@ -66,17 +112,22 @@ async def get_states(country: str = Query(...)):
 @router.get("/cities")
 async def get_cities(country: str = Query(...), state: str = Query(None)):
     if country == "Philippines":
-        # For PH, "state" is Region. We need all provinces/cities within it.
-        cities = []
-        if state and state in PH_DATA:
-            for province in PH_DATA[state]:
-                cities.extend(list(PH_DATA[state][province].keys()))
-        else:
-            # Return all cities if no region
+        # For PH, "state" is now Province.
+        if not state:
+            # Return all cities if no province
+            all_cities = []
             for region in PH_DATA:
                 for province in PH_DATA[region]:
-                    cities.extend(list(PH_DATA[region][province].keys()))
-        return sorted(list(set(cities)))
+                    all_cities.extend(list(PH_DATA[region][province].keys()))
+            return sorted(list(set(all_cities)))
+        
+        # Find the province in any region
+        norm_state = normalize_name(state)
+        for region in PH_DATA:
+            for p_name in PH_DATA[region]:
+                if normalize_name(p_name) == norm_state:
+                    return sorted(list(PH_DATA[region][p_name].keys()))
+        return []
     
     cache_key = f"{country}-{state}"
     if cache_key in CACHE["cities"]:
@@ -99,29 +150,35 @@ async def get_cities(country: str = Query(...), state: str = Query(None)):
 
 @router.get("/barangays")
 async def get_barangays(region: str = Query(None), province: str = Query(None), city: str = Query(...)):
-    # Currently only PH supports barangays in this system
+    # Search for the city across all regions and provinces
     barangays = []
-    found = False
+    norm_city = normalize_name(city)
+    norm_province = normalize_name(province) if province else None
+    norm_region = normalize_name(region) if region else None
     
     for r_name, r_data in PH_DATA.items():
-        if region and r_name != region:
+        if norm_region and normalize_name(r_name) != norm_region:
             continue
         for p_name, p_data in r_data.items():
-            if province and p_name != province:
+            if norm_province and normalize_name(p_name) != norm_province:
                 continue
-            if city in p_data:
-                barangays.extend(list(p_data[city].keys()))
-                found = True
+            # Look for city with normalization
+            for c_name in p_data:
+                if normalize_name(c_name) == norm_city:
+                    barangays.extend(list(p_data[c_name].keys()))
+                    return sorted(list(set(barangays))) # Return first match
                 
-    if not found:
-        return []
-        
-    return sorted(list(set(barangays)))
+    return []
 
 @router.get("/zipcode")
 async def get_zipcode(city: str = Query(...), barangay: str = Query(...)):
+    norm_city = normalize_name(city)
+    norm_barangay = normalize_name(barangay)
     for r_data in PH_DATA.values():
         for p_data in r_data.values():
-            if city in p_data and barangay in p_data[city]:
-                return {"zipcode": p_data[city][barangay]}
+            for c_name in p_data:
+                if normalize_name(c_name) == norm_city:
+                    for b_name in p_data[c_name]:
+                        if normalize_name(b_name) == norm_barangay:
+                            return {"zipcode": p_data[c_name][b_name]}
     return {"zipcode": ""}

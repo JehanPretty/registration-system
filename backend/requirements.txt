@@ -8,3 +8,7 @@ python-dotenv
 alembic
 pydantic
 pydantic-settings
+opencv-python-headless
+numpy
+google-auth
+requests

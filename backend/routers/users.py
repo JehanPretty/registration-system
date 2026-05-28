@@ -1,12 +1,65 @@
 from fastapi import APIRouter, Depends, HTTPException
+import re
 from sqlalchemy.orm import Session
 from typing import List
 import uuid
+import json
+import os
+import sys
+import time
+import importlib.util
 
 from database import SessionLocal, engine
 from models import GlobalUser, Attendance, Role, IDApplication
-from schemas import UserCreate, UserRead, UserUpdate, UserLogin, ChangePassword
+from schemas import UserCreate, UserRead, UserUpdate, UserLogin, ChangePassword, GoogleAuthRequest
 from auth_utils import get_password_hash, verify_password
+from id_generator import generate_structured_id
+
+def _agent_log(hypothesis_id: str, message: str, data: dict):
+    # region agent log
+    try:
+        debug_log_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "debug-113479.log"))
+        payload = {
+            "sessionId": "113479",
+            "runId": os.getenv("DEBUG_RUN_ID", "pre-fix"),
+            "hypothesisId": hypothesis_id,
+            "location": "backend/routers/users.py",
+            "message": message,
+            "data": data,
+            "timestamp": int(time.time() * 1000),
+        }
+        with open(debug_log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload) + "\n")
+    except Exception:
+        pass
+    # endregion
+
+try:
+    # region agent log
+    _agent_log(
+        "H1",
+        "attempt_google_import",
+        {"python": sys.version, "executable": sys.executable},
+    )
+    # endregion
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+    # region agent log
+    _agent_log("H1", "google_import_ok", {})
+    # endregion
+except Exception as import_exc:
+    # region agent log
+    _agent_log(
+        "H1",
+        "google_import_failed",
+        {
+            "error": str(import_exc),
+            "has_google_spec": bool(importlib.util.find_spec("google")),
+            "has_google_oauth2_spec": bool(importlib.util.find_spec("google.oauth2")) if importlib.util.find_spec("google") else False,
+        },
+    )
+    # endregion
+    raise
 
 router = APIRouter(
     prefix="/users",
@@ -50,6 +103,17 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Check if external_id is already taken
+    if user.external_id:
+        existing_external = db.query(GlobalUser).filter(GlobalUser.external_id == user.external_id).first()
+        if existing_external:
+            raise HTTPException(status_code=400, detail=f"Unique ID '{user.external_id}' is already taken.")
+
+    # Check if Full Name is already taken
+    existing_name = db.query(GlobalUser).filter(GlobalUser.name == user.name).first()
+    if existing_name:
+        raise HTTPException(status_code=400, detail=f"The account name '{user.name}' is already registered.")
+    
     # Auto-resolve role
     resolved_role = resolve_role_by_email(user.email, db)
     
@@ -82,6 +146,17 @@ def admin_create_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(GlobalUser).filter(GlobalUser.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+
+    # Check if external_id is already taken
+    if user.external_id:
+        existing_external = db.query(GlobalUser).filter(GlobalUser.external_id == user.external_id).first()
+        if existing_external:
+            raise HTTPException(status_code=400, detail=f"Unique ID '{user.external_id}' is already taken.")
+
+    # Check if Full Name is already taken
+    existing_name = db.query(GlobalUser).filter(GlobalUser.name == user.name).first()
+    if existing_name:
+        raise HTTPException(status_code=400, detail=f"The account name '{user.name}' is already registered.")
     
     # Use provided role or default to 'User'
     requested_role = user.role_context or "User"
@@ -97,10 +172,6 @@ def admin_create_user(user: UserCreate, db: Session = Depends(get_db)):
         status="verified", # Auto-verify admin created users
         attributes=user.attributes or {}
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -153,12 +224,74 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
         "id": user.id,
         "name": user.name,
         "email": user.email,
+        "external_id": user.external_id,
         "avatar_url": user.avatar_url,
         "role_context": user.role_context,
         "attributes": user.attributes,
         "status": user.status,
         "is_profile_complete": (user.attributes or {}).get("is_profile_complete", False)
     }}
+
+# POST Google Login/Signup
+@router.post("/google-auth")
+def google_auth(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
+    try:
+        # Verify the Google ID token
+        # NOTE: Ideally, the CLIENT_ID should be in a config/env file.
+        # For now, we'll accept any valid token if CLIENT_ID is not strictly enforced here, 
+        # but in production, you must verify against your Client ID.
+        idinfo = id_token.verify_oauth2_token(payload.id_token, google_requests.Request())
+        
+        email = idinfo['email']
+        name = idinfo.get('name', '')
+        picture = idinfo.get('picture', '')
+        
+        # Check if user already exists
+        user = db.query(GlobalUser).filter(GlobalUser.email == email).first()
+        
+        if not user:
+            # Auto-resolve role
+            resolved_role = resolve_role_by_email(email, db)
+            
+            # ENFORCEMENT: If no role is matched to the domain, block signup
+            if not resolved_role:
+                raise HTTPException(
+                    status_code=403, 
+                    detail="Your Google account domain is not authorized for registration."
+                )
+            
+            # Create new user
+            user = GlobalUser(
+                global_id=uuid.uuid4(),
+                name=name,
+                email=email,
+                hashed_password=get_password_hash(uuid.uuid4().hex), # Random password for OAuth
+                external_id=email.split("@")[0],
+                avatar_url=picture,
+                role_context=resolved_role,
+                attributes={"signed_up_at": datetime.utcnow().isoformat(), "is_profile_complete": False}
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            
+        return {"message": "Google authentication successful", "user": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "external_id": user.external_id,
+            "avatar_url": user.avatar_url,
+            "role_context": user.role_context,
+            "attributes": user.attributes,
+            "status": user.status,
+            "is_profile_complete": (user.attributes or {}).get("is_profile_complete", False)
+        }}
+        
+    except ValueError as e:
+        # Invalid token
+        raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Auth error: {str(e)}")
 
 # POST change password
 @router.post("/change-password")
@@ -199,6 +332,20 @@ def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get
             
         update_data["status"] = "verified"
         print(f"DEBUG: Backend KYC Passed for user {user_id}")
+
+        # ── AUTOMATIC UNIQUE ID GENERATION ──
+        # Generate or re-generate the structured ID if it's missing or invalid
+        # Pattern: PREFIX-CC-INST-YYMM-SEQ-SUFFIX
+        id_pattern = r"^[A-Z]{4}-\d{4}-\d{4}$"
+        current_id = db_user.external_id
+        
+        if not current_id or not re.match(id_pattern, str(current_id)):
+            try:
+                new_id = generate_structured_id(db, db_user.role_context)
+                db_user.external_id = new_id
+                print(f"DEBUG: Generated/Fixed Unique ID: {new_id} for {db_user.email}")
+            except Exception as e:
+                print(f"ERROR: Failed to generate Unique ID: {e}")
 
     for key, value in update_data.items():
         setattr(db_user, key, value)

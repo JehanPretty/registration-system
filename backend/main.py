@@ -3,8 +3,10 @@ import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base
-from routers import users, roles, forms, id_builder, attendance, locations, applications
-from models import SystemTheme, GlobalUser
+from routers import users, roles, forms, id_builder, attendance, locations, applications, face_detect
+from models import SystemTheme, GlobalUser, IDApplication, SystemMaintenance
+import asyncio
+from datetime import datetime, timedelta
 
 from fastapi.staticfiles import StaticFiles
 
@@ -17,7 +19,7 @@ app = FastAPI(title="Registration System API")
 # Add CORS Middleware (Supports local network IPs and dynamic dev ports)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.*\.ngrok-free\.app)(:[0-9]*)?",
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.*\.ngrok-free\.app|.*\.loca\.lt|.*\.trycloudflare\.com)(:[0-9]*)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,8 +27,18 @@ app.add_middleware(
 
 # Mount the static directory for uploaded files
 import os
+from fastapi import Response
+
+class CORSStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope) -> Response:
+        response = await super().get_response(path, scope)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        return response
+
 os.makedirs("uploads", exist_ok=True)
-app.mount("/static", StaticFiles(directory="uploads"), name="static")
+app.mount("/static", CORSStaticFiles(directory="uploads"), name="static")
 
 from routers import users, roles, forms, id_builder, attendance, locations, uploads
 
@@ -39,6 +51,7 @@ app.include_router(attendance.router)
 app.include_router(locations.router)
 app.include_router(uploads.router)
 app.include_router(applications.router)
+app.include_router(face_detect.router)
 
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -62,6 +75,20 @@ def get_db():
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Registration System API"}
+
+@app.get("/locations/ph")
+def get_philippine_locations():
+    import json
+    try:
+        with open("philippine_locations.json", "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+@app.get("/debug/db")
+def debug_db():
+    from database import DATABASE_URL
+    return {"database_url": DATABASE_URL}
 
 @app.get("/ping")
 def ping():
@@ -98,6 +125,79 @@ def update_theme(data: ThemeUpdate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(theme)
     return {"primary_color": theme.primary_color}
+
+async def purge_signatures_task():
+    """Background task to delete signatures from archived/rejected apps older than 30 days."""
+    while True:
+        print("Running Archive & Purge Task...")
+        db = SessionLocal()
+        try:
+            cutoff = datetime.utcnow() - timedelta(days=30)
+            # Find apps that are completed/rejected and older than 30 days
+            apps = db.query(IDApplication).join(GlobalUser).filter(
+                IDApplication.status.in_(["completed", "rejected"]),
+                IDApplication.updated_at <= cutoff,
+                GlobalUser.signature_url.isnot(None)
+            ).all()
+            
+            count = 0
+            for app in apps:
+                user = app.user
+                if user and user.signature_url:
+                    # Extracts filename from /static/filename.png
+                    filename = user.signature_url.split("/")[-1]
+                    file_path = os.path.join("uploads", filename)
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                        count += 1
+                    user.signature_url = None
+            
+            
+            if count > 0:
+                db.commit()
+                # Record the maintenance event
+                maint = db.query(SystemMaintenance).first()
+                if not maint:
+                    maint = SystemMaintenance(last_purge_count=count, last_purge_at=datetime.utcnow(), is_notified=False)
+                    db.add(maint)
+                else:
+                    maint.last_purge_count = count
+                    maint.last_purge_at = datetime.utcnow()
+                    maint.is_notified = False
+                db.commit()
+                print(f"Purge complete: Deleted {count} signature files.")
+            else:
+                print("Purge complete: No signatures to delete.")
+                
+        except Exception as e:
+            print(f"Purge Task Error: {e}")
+        finally:
+            db.close()
+        
+        await asyncio.sleep(86400) # Run every 24 hours
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(purge_signatures_task())
+
+@app.get("/maintenance/purge-stats")
+def get_purge_stats(db: Session = Depends(get_db)):
+    maint = db.query(SystemMaintenance).order_by(SystemMaintenance.id.desc()).first()
+    if not maint or maint.is_notified:
+        return {"show_notification": False}
+    return {
+        "show_notification": True,
+        "count": maint.last_purge_count,
+        "date": maint.last_purge_at
+    }
+
+@app.post("/maintenance/acknowledge")
+def acknowledge_purge(db: Session = Depends(get_db)):
+    maint = db.query(SystemMaintenance).filter(SystemMaintenance.is_notified == False).first()
+    if maint:
+        maint.is_notified = True
+        db.commit()
+    return {"status": "ok"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
