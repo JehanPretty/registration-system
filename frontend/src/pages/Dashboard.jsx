@@ -808,7 +808,7 @@ function Dashboard() {
             <div className="relative" ref={notificationDropdownRef}>
               <button
                 onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
-                className="hidden sm:flex w-10 h-10 items-center justify-center text-white/50 hover:text-white transition-all relative active:scale-90"
+                className="flex w-10 h-10 items-center justify-center text-white/50 hover:text-white transition-all relative active:scale-90"
               >
                 <Bell className="w-5 h-5" />
                 {(pendingAppsCount > 0 || (userApplication && userApplication.status !== 'completed')) && (
@@ -819,7 +819,7 @@ function Dashboard() {
               </button>
 
               {showNotificationDropdown && (
-                <div className="absolute top-full right-[-50px] mt-2 w-[380px] bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-full right-0 max-sm:fixed max-sm:top-[64px] max-sm:inset-x-3 max-sm:right-auto max-sm:w-auto mt-2 w-[380px] bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
                   <div className="px-5 py-4 border-b border-slate-50">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-black text-slate-800 tracking-widest">Notifications</h3>
@@ -871,9 +871,9 @@ function Dashboard() {
                         <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
                           <CreditCard className="w-5 h-5" />
                         </div>
-                        <div>
-                          <p className="text-[11px] font-black text-slate-800 mb-1">Pending ID Applications</p>
-                          <p className="text-[10px] font-bold text-slate-400">There are {pendingAppsCount} new applications waiting for your review in the dock.</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-black text-slate-800 mb-1 break-words">Pending ID Applications</p>
+                          <p className="text-[10px] font-bold text-slate-400 break-words">There are {pendingAppsCount} new applications waiting for your review in the dock.</p>
                         </div>
                         {unreadKeys.includes("admin-pending") && <div className="w-2 h-2 bg-blue-500 rounded-full self-center shrink-0 ml-auto" />}
                       </button>
@@ -896,25 +896,25 @@ function Dashboard() {
                           <p className="text-[11px] font-black text-slate-800 mb-1">PVC ID Request Status</p>
 
                           {userApplication.status === "pending" && (
-                            <p className="text-[10px] font-bold text-slate-500">Your PVC Request has been submitted and is currently pending registrar review.</p>
+                            <p className="text-[10px] font-bold text-slate-500 break-words">Your PVC Request has been submitted and is currently pending registrar review.</p>
                           )}
                           {userApplication.status === "rejected" && (
-                            <p className="text-[10px] font-bold text-rose-600">Your PVC Request was rejected by the registrar. Please check your profile details.</p>
+                            <p className="text-[10px] font-bold text-rose-600 break-words">Your PVC Request was rejected by the registrar. Please check your profile details.</p>
                           )}
                           {userApplication.status === "approved" && (
-                            <p className="text-[10px] font-bold text-blue-600">Your PVC card has been approved! It is currently queued in print production.</p>
+                            <p className="text-[10px] font-bold text-blue-600 break-words">Your PVC card has been approved! It is currently queued in print production.</p>
                           )}
                           {userApplication.status === "printed" && userApplication.fulfillment_method === "delivery" && !userApplication.tracking_number && (
-                            <p className="text-[10px] font-bold text-indigo-600">Your PVC card has been printed! We are packaging it for shipment.</p>
+                            <p className="text-[10px] font-bold text-indigo-600 break-words">Your PVC card has been printed! We are packaging it for shipment.</p>
                           )}
                           {userApplication.status === "printed" && userApplication.fulfillment_method === "delivery" && userApplication.tracking_number && (
-                            <p className="text-[10px] font-bold text-indigo-600">Your PVC card has been shipped via J&T Express! Tracking No: <span className="font-mono bg-indigo-100 px-1 py-0.5 rounded">{userApplication.tracking_number}</span>.</p>
+                            <p className="text-[10px] font-bold text-indigo-600 break-words">Your PVC card has been shipped via J&T Express! Tracking No: <span className="font-mono bg-indigo-100 px-1 py-0.5 rounded break-all">{userApplication.tracking_number}</span>.</p>
                           )}
                           {userApplication.status === "printed" && userApplication.fulfillment_method === "pickup" && !userApplication.is_ready && (
-                            <p className="text-[10px] font-bold text-slate-500">Your PVC card has been printed! Our team is currently filing it in organizing drawers.</p>
+                            <p className="text-[10px] font-bold text-slate-500 break-words">Your PVC card has been printed! Our team is currently filing it in organizing drawers.</p>
                           )}
                           {userApplication.status === "printed" && userApplication.fulfillment_method === "pickup" && userApplication.is_ready && (
-                            <p className="text-[10px] font-bold text-amber-600 font-black">ID Ready for Pickup! Your physical PVC ID is ready for pick-up at: <span className="underline">{userApplication.collection_location || "Main Registrar Windows"}</span>.</p>
+                            <p className="text-[10px] font-bold text-amber-600 font-black break-words">ID Ready for Pickup! Your physical PVC ID is ready for pick-up at: <span className="underline">{userApplication.collection_location || "Main Registrar Windows"}</span>.</p>
                           )}
                           {userApplication.status === "completed" && (
                             <p className="text-[10px] font-bold text-emerald-600">Fulfillment Complete! Your physical PVC ID card handover is successfully recorded.</p>

@@ -188,10 +188,10 @@ const AddressForm = ({ values = {}, onChange, errors = {}, visibleFields }) => {
   const baseInputClasses = "w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-[#1a234b] outline-none transition-all focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 placeholder:text-slate-400";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
 
       {/* Row 1: Country | Province | City/Municipality */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {isFieldVisible("country") && (
           <SearchableSelect
             label="Country"
@@ -234,7 +234,7 @@ const AddressForm = ({ values = {}, onChange, errors = {}, visibleFields }) => {
       </div>
 
       {/* Row 2: Barangay | House/Unit No. */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {(!countryVal || isPH) && isFieldVisible("barangay") && (
           <SearchableSelect
             label="Barangay"
@@ -249,8 +249,8 @@ const AddressForm = ({ values = {}, onChange, errors = {}, visibleFields }) => {
         )}
 
         {isFieldVisible("unit") && (
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-500 ml-1">House / Unit / Building No.</label>
+          <div className="space-y-1">
+            <label className="block text-[10px] font-black text-slate-500 ml-1">House / Unit / Building No.</label>
             <div className="relative group">
               <input
                 type="text"
@@ -267,8 +267,8 @@ const AddressForm = ({ values = {}, onChange, errors = {}, visibleFields }) => {
 
       {/* Row 3: Street Name (full width) */}
       {isFieldVisible("street") && (
-        <div className="space-y-1.5">
-          <label className="block text-xs font-bold text-slate-500 ml-1">Street Name</label>
+        <div className="space-y-1">
+          <label className="block text-[10px] font-black text-slate-500 ml-1">Street Name</label>
           <div className="relative group">
             <input
               type="text"
@@ -285,8 +285,8 @@ const AddressForm = ({ values = {}, onChange, errors = {}, visibleFields }) => {
 
       {/* Row 4: Zip Code */}
       {isFieldVisible("zipcode") && (
-        <div className="space-y-1.5 w-44">
-          <label className="block text-xs font-bold text-slate-500 ml-1">Zip Code</label>
+        <div className="space-y-1 w-44">
+          <label className="block text-[10px] font-black text-slate-500 ml-1">Zip Code</label>
           <div className="relative group">
             <input
               type="text"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button, Steps, Upload, Result, Modal, Spin, Input, Form, Typography, Space, Row, Col, Card, message } from "antd";
 import { UploadOutlined, CameraOutlined, CheckCircleOutlined, SyncOutlined, IdcardOutlined, QrcodeOutlined, DownloadOutlined, PrinterOutlined } from "@ant-design/icons";
 import { Eye, X, ShieldCheck, ChevronRight, CheckCircle2, BadgeCheck, XCircle, Scan, Calendar, Ticket, MapPin, Sparkles, PenLine, AlertTriangle, Loader2, Truck, Plus, CreditCard } from "lucide-react";
@@ -27,7 +27,7 @@ const ProgressTracker = ({ currentStep }) => {
     ];
 
     return (
-        <div className="py-6 px-6 bg-white border border-slate-100 rounded-2xl shadow-sm mb-10 transition-all duration-500">
+        <div className="py-6 max-sm:py-4 px-6 max-sm:px-4 bg-white border border-slate-100 rounded-2xl shadow-sm mb-10 max-sm:mb-4 transition-all duration-500">
             <div className="max-w-sm mx-auto flex items-center justify-between relative">
                 <div className="absolute top-3.5 left-0 right-0 h-[2px] bg-slate-100 z-0">
                     <div
@@ -364,6 +364,47 @@ const DigitalID = ({ userData, setUserData }) => {
         }
     }, [application, userData]);
 
+    const mergedUserData = useMemo(() => {
+        if (!userData) return null;
+        
+        const formData = application?.form_data || (Array.isArray(application) ? application[0]?.form_data : {}) || {};
+        const attrs = userData?.attributes || {};
+        
+        const getVal = (keys) => {
+            const formDataKeys = Object.keys(formData);
+            for (const k of keys) {
+                if (attrs[k]) return attrs[k];
+                // Case-insensitive search in formData
+                const match = formDataKeys.find(fk => fk.toLowerCase() === k.toLowerCase());
+                if (match && formData[match]) return formData[match];
+            }
+            return null;
+        };
+
+        const dob = getVal(['dob', 'Date of Birth', 'Birth Date', 'Birthdate', 'Birthday', 'date_of_birth']);
+        const phone = getVal(['phone', 'Phone Number', 'Mobile Number', 'Contact Number', 'Mobile No.', 'phone_number', 'mobile']);
+
+        return {
+            ...userData,
+            attributes: {
+                ...attrs,
+                dob: dob || attrs.dob,
+                phone: phone || attrs.phone
+            }
+        };
+    }, [userData, application]);
+
+    // Auto-populate delivery form when merged user data (including form data) becomes available
+    useEffect(() => {
+        if (mergedUserData) {
+            setDeliveryForm(prev => ({
+                ...prev,
+                recipientName: prev.recipientName || mergedUserData.name || "",
+                phoneNumber: prev.phoneNumber || mergedUserData.attributes?.phone || ""
+            }));
+        }
+    }, [mergedUserData]);
+
     useEffect(() => {
         if (userData?.role_context) {
             const fetchTemplate = async () => {
@@ -640,40 +681,60 @@ const DigitalID = ({ userData, setUserData }) => {
     };
 
     // Enhanced Canvas-based background removal for signatures
+    // Mobile-safe: downscales large images first to avoid GPU/memory crashes on mobile Chrome
     const removeBackground = (dataUrl) =>
-        new Promise((resolve) => {
+        new Promise((resolve, reject) => {
             const img = new Image();
+            img.onerror = () => reject(new Error('Failed to load signature image.'));
             img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-
-                // More aggressive threshold for signatures
-                const threshold = 210;
-                for (let i = 0; i < data.length; i += 4) {
-                    const r = data[i], g = data[i + 1], b = data[i + 2];
-                    const brightness = (r + g + b) / 3;
-
-                    if (brightness > threshold) {
-                        data[i + 3] = 0; // Transparent
-                    } else if (brightness > 160) {
-                        // Soft fade
-                        const alpha = Math.round(((brightness - 160) / (threshold - 160)) * 255);
-                        data[i + 3] = 255 - alpha;
-                    } else {
-                        // Keep darker pixels and make them darker (black ink)
-                        const darkBoost = brightness / 160;
-                        data[i] *= darkBoost;
-                        data[i + 1] *= darkBoost;
-                        data[i + 2] *= darkBoost;
+                try {
+                    // --- Downscale for mobile safety (max 1200px on longest side) ---
+                    const MAX_SIDE = 1200;
+                    let drawW = img.width;
+                    let drawH = img.height;
+                    if (drawW > MAX_SIDE || drawH > MAX_SIDE) {
+                        const scale = MAX_SIDE / Math.max(drawW, drawH);
+                        drawW = Math.round(drawW * scale);
+                        drawH = Math.round(drawH * scale);
                     }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = drawW;
+                    canvas.height = drawH;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        reject(new Error('Canvas 2D context unavailable.'));
+                        return;
+                    }
+                    ctx.drawImage(img, 0, 0, drawW, drawH);
+                    const imageData = ctx.getImageData(0, 0, drawW, drawH);
+                    const data = imageData.data;
+
+                    // More aggressive threshold for signatures
+                    const threshold = 210;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i], g = data[i + 1], b = data[i + 2];
+                        const brightness = (r + g + b) / 3;
+
+                        if (brightness > threshold) {
+                            data[i + 3] = 0; // Transparent
+                        } else if (brightness > 160) {
+                            // Soft fade
+                            const alpha = Math.round(((brightness - 160) / (threshold - 160)) * 255);
+                            data[i + 3] = 255 - alpha;
+                        } else {
+                            // Keep darker pixels and make them darker (black ink)
+                            const darkBoost = brightness / 160;
+                            data[i] *= darkBoost;
+                            data[i + 1] *= darkBoost;
+                            data[i + 2] *= darkBoost;
+                        }
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                } catch (err) {
+                    reject(err);
                 }
-                ctx.putImageData(imageData, 0, 0);
-                resolve(canvas.toDataURL('image/png'));
             };
             img.src = dataUrl;
         });
@@ -986,51 +1047,51 @@ const DigitalID = ({ userData, setUserData }) => {
     const renderPageContent = () => {
         if (!isApplying && !hasApplied) {
             return (
-                <div className="flex-1 flex flex-col p-8 animate-in fade-in duration-700 max-w-6xl mx-auto w-full">
-                    <div className="mb-12 text-center">
-                        <Title level={1} className="!text-[#1a234b] !font-black !mb-2">Digital ID/QR</Title>
-                        <Text className="text-slate-500 font-medium text-base">
+                <div className="flex-1 flex flex-col p-8 max-sm:p-4 animate-in fade-in duration-700 max-w-6xl mx-auto w-full overflow-y-auto max-h-[100dvh]">
+                    <div className="mb-12 max-sm:mb-4 text-center">
+                        <Title level={1} className="!text-[#1a234b] !font-black !mb-2 max-sm:!mb-0 max-sm:!text-2xl">Digital ID/QR</Title>
+                        <Text className="text-slate-500 font-medium text-base max-sm:text-xs">
                             Complete your identity verification in three simple steps to unlock your digital ID.
                         </Text>
                     </div>
 
-                    <Row gutter={[32, 32]} className="mb-16">
+                    <Row gutter={[16, 16]} className="mb-16 max-sm:mb-6">
                         <Col xs={24} md={8}>
-                            <Card hoverable className="h-full border-slate-100 shadow-sm text-center !rounded-2xl overflow-hidden">
-                                <div className="h-48 bg-slate-50 -mx-6 -mt-6 mb-6 p-4 flex items-center justify-center">
+                            <Card hoverable className="h-full border-slate-100 shadow-sm text-center !rounded-2xl overflow-hidden max-sm:!p-2">
+                                <div className="h-48 max-sm:h-20 bg-slate-50 -mx-6 -mt-6 mb-6 max-sm:mb-2 max-sm:-mx-2 max-sm:-mt-2 p-4 flex items-center justify-center">
                                     <img src={Step1Img} alt="Submission" className="h-full object-contain drop-shadow-md" />
                                 </div>
-                                <Title level={4} className="!text-[#1a234b] !font-black">Step 1: Submission</Title>
-                                <Paragraph className="text-slate-500 text-sm">
+                                <Title level={4} className="!text-[#1a234b] !font-black max-sm:!text-sm max-sm:!mb-1">Step 1: Submission</Title>
+                                <Paragraph className="text-slate-500 text-sm max-sm:text-[10px] max-sm:mb-0 max-sm:leading-tight">
                                     Attach your formal ID photo and digital signature to begin your profile creation.
                                 </Paragraph>
                             </Card>
                         </Col>
                         <Col xs={24} md={8}>
-                            <Card hoverable className="h-full border-slate-100 shadow-sm text-center !rounded-2xl overflow-hidden">
-                                <div className="h-48 bg-slate-50 -mx-6 -mt-6 mb-6 p-4 flex items-center justify-center">
+                            <Card hoverable className="h-full border-slate-100 shadow-sm text-center !rounded-2xl overflow-hidden max-sm:!p-2">
+                                <div className="h-48 max-sm:h-20 bg-slate-50 -mx-6 -mt-6 mb-6 max-sm:mb-2 max-sm:-mx-2 max-sm:-mt-2 p-4 flex items-center justify-center">
                                     <img src={Step2Img} alt="Biometric Syncing" className="h-full object-contain drop-shadow-md" />
                                 </div>
-                                <Title level={4} className="!text-[#1a234b] !font-black">Step 2: Biometric Syncing</Title>
-                                <Paragraph className="text-slate-500 text-sm">
+                                <Title level={4} className="!text-[#1a234b] !font-black max-sm:!text-sm max-sm:!mb-1">Step 2: Biometric Syncing</Title>
+                                <Paragraph className="text-slate-500 text-sm max-sm:text-[10px] max-sm:mb-0 max-sm:leading-tight">
                                     Take a live selfie. Our system will instantly verify if it matches your uploaded formal photo.
                                 </Paragraph>
                             </Card>
                         </Col>
                         <Col xs={24} md={8}>
-                            <Card hoverable className="h-full border-slate-100 shadow-sm text-center !rounded-2xl overflow-hidden">
-                                <div className="h-48 bg-slate-50 -mx-6 -mt-6 mb-6 p-4 flex items-center justify-center">
+                            <Card hoverable className="h-full border-slate-100 shadow-sm text-center !rounded-2xl overflow-hidden max-sm:!p-2">
+                                <div className="h-48 max-sm:h-20 bg-slate-50 -mx-6 -mt-6 mb-6 max-sm:mb-2 max-sm:-mx-2 max-sm:-mt-2 p-4 flex items-center justify-center">
                                     <img src={Step3Img} alt="Processing" className="h-full object-contain drop-shadow-md" />
                                 </div>
-                                <Title level={4} className="!text-[#1a234b] !font-black">Step 3: Processing</Title>
-                                <Paragraph className="text-slate-500 text-sm">
+                                <Title level={4} className="!text-[#1a234b] !font-black max-sm:!text-sm max-sm:!mb-1">Step 3: Processing</Title>
+                                <Paragraph className="text-slate-500 text-sm max-sm:text-[10px] max-sm:mb-0 max-sm:leading-tight">
                                     Submit your verified profile to the Registrar/ID Management for final approval and issuance.
                                 </Paragraph>
                             </Card>
                         </Col>
                     </Row>
 
-                    <div className="flex justify-center">
+                    <div className="flex justify-center max-sm:pb-8 shrink-0">
                         <Button
                             type="primary"
                             size="large"
@@ -1039,7 +1100,7 @@ const DigitalID = ({ userData, setUserData }) => {
                             onClick={() => {
                                 setShowGuidelinesModal(true);
                             }}
-                            className="bg-[#1a234b] hover:!bg-blue-900 !h-14 !px-12 !text-base !font-black !rounded-xl !tracking-widest shadow-xl shadow-blue-900/20"
+                            className="bg-[#1a234b] hover:!bg-blue-900 !h-14 max-sm:!h-12 !px-12 max-sm:!px-8 !text-base max-sm:!text-sm !font-black !rounded-xl !tracking-widest shadow-xl shadow-blue-900/20"
                         >
                             Start Application
                         </Button>
@@ -1050,17 +1111,17 @@ const DigitalID = ({ userData, setUserData }) => {
 
         if (isApplying) {
             return (
-                <div className="flex-1 flex flex-col p-8 animate-in fade-in duration-700 max-w-4xl mx-auto w-full">
+                <div className="flex-1 flex flex-col p-8 max-sm:p-4 animate-in fade-in duration-700 max-w-4xl mx-auto w-full overflow-y-auto max-h-[100dvh]">
                     <ProgressTracker currentStep={currentStep + 1} />
 
-                    <div className="flex-1 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                    <div className="flex-1 bg-white p-8 max-sm:p-4 rounded-3xl max-sm:rounded-2xl shadow-sm border border-slate-100">
                         {/* STEP 1: Data Verification & Uploads */}
                         {currentStep === 0 && (
                             <div className="animate-in slide-in-from-right-4 duration-500">
-                                <Title level={3} className="!text-[#1a234b] !font-black !mb-6">Data Verification & Uploads</Title>
+                                <Title level={3} className="!text-[#1a234b] !font-black !mb-6 max-sm:!mb-3 max-sm:!text-lg">Data Verification & Uploads</Title>
 
                                 {/* Data Verification Display */}
-                                <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-sm mb-8 relative overflow-hidden group">
+                                <div className="bg-white border border-slate-100 rounded-3xl max-sm:rounded-2xl p-8 max-sm:p-4 shadow-sm mb-8 max-sm:mb-4 relative overflow-hidden group">
                                     {/* Decorative accent */}
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full -mr-16 -mt-16 transition-transform duration-700 group-hover:scale-110" />
 
@@ -1099,7 +1160,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                     </Row>
                                 </div>
 
-                                <Row gutter={24}>
+                                <Row gutter={[24, 16]}>
                                     <Col xs={24} md={12}>
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-[2px]">Formal Portrait</span>
@@ -1113,7 +1174,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                         </div>
 
                                         {/* Photo Helper Card */}
-                                        <div className="mb-4 bg-emerald-50/30 border border-emerald-100/50 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300 min-h-[110px]">
+                                        <div className="mb-4 max-sm:mb-3 bg-emerald-50/30 border border-emerald-100/50 p-4 max-sm:p-3 rounded-2xl flex items-start gap-3 max-sm:gap-2 animate-in fade-in slide-in-from-top-2 duration-300 min-h-[110px] max-sm:min-h-0">
                                             <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm border border-emerald-50 mt-0.5 flex-shrink-0">
                                                 <CameraOutlined className="text-emerald-600 text-xs" />
                                             </div>
@@ -1151,7 +1212,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                                     return false;
                                                 }}
                                                 showUploadList={false}
-                                                className={`!bg-slate-50/50 hover:!bg-blue-50/50 transition-all !rounded-3xl border-2 border-dashed ${photoError ? 'border-red-500 bg-red-50/5 animate-pulse' : isPhotoValid === false ? 'border-red-200' : 'border-slate-100'} h-[200px] flex items-center justify-center overflow-hidden`}
+                                                className={`!bg-slate-50/50 hover:!bg-blue-50/50 transition-all !rounded-3xl max-sm:!rounded-2xl border-2 border-dashed ${photoError ? 'border-red-500 bg-red-50/5 animate-pulse' : isPhotoValid === false ? 'border-red-200' : 'border-slate-100'} h-[200px] max-sm:h-[160px] flex items-center justify-center overflow-hidden`}
                                             >
                                                 {idPhoto ? (
                                                     <div className="relative h-full w-full p-2">
@@ -1198,7 +1259,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                         </div>
 
                                         {/* Signature Helper Card */}
-                                        <div className="mb-4 bg-blue-50/30 border border-blue-100/50 p-4 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300 min-h-[110px]">
+                                        <div className="mb-4 max-sm:mb-3 bg-blue-50/30 border border-blue-100/50 p-4 max-sm:p-3 rounded-2xl flex items-start gap-3 max-sm:gap-2 animate-in fade-in slide-in-from-top-2 duration-300 min-h-[110px] max-sm:min-h-0">
                                             <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center shadow-sm border border-blue-50 mt-0.5 flex-shrink-0">
                                                 <PenLine className="w-3.5 h-3.5 text-blue-600" />
                                             </div>
@@ -1261,7 +1322,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                                 return false;
                                             }}
                                             showUploadList={false}
-                                            className={`!bg-slate-50/50 hover:!bg-blue-50/50 transition-all !rounded-3xl border-2 border-dashed ${signatureError ? 'border-red-500 bg-red-50/5 animate-pulse' : 'border-slate-100'} h-[200px] flex items-center justify-center overflow-hidden`}
+                                            className={`!bg-slate-50/50 hover:!bg-blue-50/50 transition-all !rounded-3xl max-sm:!rounded-2xl border-2 border-dashed ${signatureError ? 'border-red-500 bg-red-50/5 animate-pulse' : 'border-slate-100'} h-[200px] max-sm:h-[160px] flex items-center justify-center overflow-hidden`}
                                         >
                                             {removingSigBg ? (
                                                 <div className="flex flex-col items-center gap-2">
@@ -1295,7 +1356,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                     </Col>
                                 </Row>
 
-                                <div className="mt-10 flex justify-end">
+                                <div className="mt-10 max-sm:mt-6 flex justify-end max-sm:justify-center">
                                     <Button
                                         type="primary"
                                         size="large"
@@ -1317,7 +1378,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                             if (hasErr) return;
                                             setCurrentStep(1);
                                         }}
-                                        className="bg-[#1a234b] hover:!bg-blue-900 !h-14 !px-12 !text-sm !font-black !rounded-xl !tracking-widest shadow-xl shadow-blue-900/10"
+                                        className="bg-[#1a234b] hover:!bg-blue-900 !h-14 max-sm:!h-12 !px-12 max-sm:!px-8 !text-sm max-sm:!text-xs !font-black !rounded-xl !tracking-widest shadow-xl shadow-blue-900/10 max-sm:w-full"
                                     >
                                         Next Step
                                     </Button>
@@ -1328,13 +1389,13 @@ const DigitalID = ({ userData, setUserData }) => {
                         {/* STEP 2: Biometric Matching */}
                         {currentStep === 1 && (
                             <div className="animate-in slide-in-from-right-4 duration-500">
-                                <Title level={3} className="!text-[#1a234b] !font-black !mb-2">Biometric Syncing</Title>
-                                <Paragraph className="text-slate-500 font-medium text-xs mb-8">
+                                <Title level={3} className="!text-[#1a234b] !font-black !mb-2 max-sm:!text-lg">Biometric Syncing</Title>
+                                <Paragraph className="text-slate-500 font-medium text-xs mb-8 max-sm:mb-4">
                                     Our AI will now verify if your live selfie matches the formal photo you uploaded.
                                 </Paragraph>
 
-                                <div className="flex flex-col items-center py-4">
-                                    <div className="relative w-[320px] h-[400px] rounded-[40px] overflow-hidden shadow-2xl bg-slate-900 mb-8 group">
+                                <div className="flex flex-col items-center py-4 max-sm:py-2">
+                                    <div className="relative w-[320px] h-[400px] max-sm:w-[260px] max-sm:h-[340px] rounded-[40px] max-sm:rounded-[28px] overflow-hidden shadow-2xl bg-slate-900 mb-8 max-sm:mb-4 group">
                                         {biometricStatus === "success" ? (
                                             <div className="absolute inset-0 bg-emerald-500 flex flex-col items-center justify-center animate-in zoom-in duration-500 p-8 text-center z-50">
                                                 <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mb-4 border-2 border-white/40">
@@ -1356,7 +1417,7 @@ const DigitalID = ({ userData, setUserData }) => {
 
                                                 {/* Oval HUD Overlay - MATCHING MOBILE */}
                                                 <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-                                                    <div className={`w-[200px] h-[260px] rounded-[100px] border-4 transition-all duration-500 
+                                                    <div className={`w-[200px] h-[260px] max-sm:w-[160px] max-sm:h-[210px] rounded-[100px] border-4 transition-all duration-500 
                                                         ${isFaceCentered ? 'border-white/50 border-dashed scale-105' : 'border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.3)]'}`}
                                                     >
                                                         <div className={`absolute inset-0 rounded-[100px] border-2 ${isFaceCentered ? 'border-white opacity-20' : 'border-red-500 opacity-40'}`} />
@@ -1441,12 +1502,12 @@ const DigitalID = ({ userData, setUserData }) => {
 
                         {/* STEP 3: Final Submission */}
                         {currentStep === 2 && (
-                            <div className="animate-in slide-in-from-right-4 duration-500 text-center py-8">
-                                <div className="w-20 h-20 bg-blue-50 rounded-[32px] flex items-center justify-center mx-auto mb-6">
-                                    <Sparkles className="w-10 h-10 text-[#1a234b]" />
+                            <div className="animate-in slide-in-from-right-4 duration-500 text-center py-8 max-sm:py-4">
+                                <div className="w-20 h-20 max-sm:w-14 max-sm:h-14 bg-blue-50 rounded-[32px] max-sm:rounded-[20px] flex items-center justify-center mx-auto mb-6 max-sm:mb-4">
+                                    <Sparkles className="w-10 h-10 max-sm:w-7 max-sm:h-7 text-[#1a234b]" />
                                 </div>
-                                <Title level={2} className="!text-[#1a234b] !font-black !mb-2">Almost There!</Title>
-                                <Paragraph className="text-slate-500 font-medium text-sm mb-12 max-w-md mx-auto">
+                                <Title level={2} className="!text-[#1a234b] !font-black !mb-2 max-sm:!text-xl">Almost There!</Title>
+                                <Paragraph className="text-slate-500 font-medium text-sm max-sm:text-xs mb-12 max-sm:mb-6 max-w-md mx-auto">
                                     Your profile is now verified. Click submit to send your application to the ID Management for final issuance of your Digital ID.
                                 </Paragraph>
 
@@ -1456,7 +1517,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                         size="large"
                                         loading={isProcessing}
                                         onClick={simulateProcessing}
-                                        className="w-full bg-[#1a234b] hover:!bg-blue-900 !h-14 !text-sm !font-black !rounded-xl !tracking-widest shadow-xl shadow-blue-900/20"
+                                        className="w-full bg-[#1a234b] hover:!bg-blue-900 !h-14 max-sm:!h-12 !text-sm max-sm:!text-xs !font-black !rounded-xl !tracking-widest shadow-xl shadow-blue-900/20"
                                     >
                                         Submit Application
                                     </Button>
@@ -1473,16 +1534,16 @@ const DigitalID = ({ userData, setUserData }) => {
 
                         {/* STEP 4: Processing */}
                         {currentStep === 3 && (
-                            <div className="animate-in zoom-in-95 duration-700 text-center py-12">
-                                <div className="py-20 flex flex-col items-center justify-center">
+                            <div className="animate-in zoom-in-95 duration-700 text-center py-12 max-sm:py-6">
+                                <div className="py-20 max-sm:py-10 flex flex-col items-center justify-center">
                                     <div className="relative">
                                         <div className="w-24 h-24 rounded-full border-4 border-slate-100 border-t-[#1a234b] animate-spin" />
                                         <div className="absolute inset-0 flex items-center justify-center">
                                             <SyncOutlined className="text-2xl text-[#1a234b] animate-pulse" />
                                         </div>
                                     </div>
-                                    <Title level={2} className="!text-[#1a234b] !font-black !mt-10 !mb-2 tracking-tighter">Issuing Digital ID</Title>
-                                    <Paragraph className="text-slate-500 font-medium text-base">Finalizing your identity records in ID Management...</Paragraph>
+                                    <Title level={2} className="!text-[#1a234b] !font-black !mt-10 max-sm:!mt-6 !mb-2 tracking-tighter max-sm:!text-xl">Issuing Digital ID</Title>
+                                    <Paragraph className="text-slate-500 font-medium text-base max-sm:text-sm">Finalizing your identity records in ID Management...</Paragraph>
                                 </div>
                             </div>
                         )}
@@ -1493,17 +1554,62 @@ const DigitalID = ({ userData, setUserData }) => {
 
         // VIEW 3: Final Issued ID Card
         return (
-            <div className="flex-1 flex flex-col p-8 max-w-6xl mx-auto w-full">
-                <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <BadgeCheck className="w-5 h-5 text-emerald-500" />
-                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[2px]">Identity Secured</span>
+            <div className="flex-1 flex flex-col p-8 max-sm:p-3 max-w-6xl mx-auto w-full overflow-y-auto max-h-[100dvh]">
+                <div className="mb-12 max-sm:mb-4 flex flex-col md:flex-row md:items-end justify-between gap-6 max-sm:gap-3">
+                    <div className="max-sm:flex max-sm:items-center max-sm:justify-between max-sm:w-full">
+                        <div>
+                            <div className="flex items-center gap-2 mb-2 max-sm:mb-0">
+                                <BadgeCheck className="w-5 h-5 max-sm:w-3.5 max-sm:h-3.5 text-emerald-500" />
+                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[2px] max-sm:text-[8px]">Secured</span>
+                            </div>
+                            <Title level={1} className="!text-[#1a234b] !font-black !mb-0 max-sm:!text-xl">Digital ID Card</Title>
                         </div>
-                        <Title level={1} className="!text-[#1a234b] !font-black !mb-0">Digital ID Card</Title>
+                        <div className="md:hidden flex gap-2">
+                             {physicalIDStatus === "idle" ? (
+                                 <Button
+                                     icon={<CreditCard className="w-3 h-3" />}
+                                     className="!rounded-lg !font-bold !h-9 !px-2.5 border-slate-200 text-[9px]"
+                                     onClick={() => {
+                                         const date = new Date();
+                                         date.setDate(date.getDate() + 7);
+                                         setScheduledDate(date.toISOString());
+                                         setShowPhysicalIDRequest(true);
+                                     }}
+                                 >
+                                     Request ID
+                                 </Button>
+                             ) : (
+                                 <>
+                                     {fulfillmentMethod === 'delivery' && (
+                                         <Button
+                                             icon={<Truck className="w-3 h-3 text-[#00b8b8]" />}
+                                             className="!rounded-lg !font-bold !h-9 !px-2.5 border border-slate-200 bg-white hover:!bg-slate-50 !text-slate-700 shadow-sm text-[9px]"
+                                             onClick={() => setShowTrackingModal(true)}
+                                         >
+                                             Track
+                                         </Button>
+                                     )}
+                                     <Button
+                                         icon={<CreditCard className="w-3 h-3 text-slate-500" />}
+                                         className="!rounded-lg !font-bold !h-9 !px-2.5 border-slate-200 text-[9px]"
+                                         onClick={() => setShowClaimingModal(true)}
+                                     >
+                                         Claim Stub
+                                     </Button>
+                                 </>
+                             )}
+                             <Button
+                                type="primary"
+                                icon={<Eye className="w-3 h-3" />}
+                                className="bg-[#1a234b] !rounded-lg !font-bold !h-9 !px-3 shadow-md shadow-blue-900/10 text-[10px]"
+                                onClick={() => setIsFullPreview(true)}
+                            >
+                                View
+                            </Button>
+                        </div>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 max-sm:hidden">
                         {physicalIDStatus === "idle" ? (
                             <Button
                                 icon={<CreditCard className="w-4 h-4" />}
@@ -1534,7 +1640,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                     className="!rounded-xl !font-bold !h-11 !px-6 border-slate-200 hover:scale-[1.02] transition-all"
                                     onClick={() => setShowClaimingModal(true)}
                                 >
-                                    Digital Claim Stub
+                                    Claim Stub
                                 </Button>
                             </>
                         )}
@@ -1549,40 +1655,40 @@ const DigitalID = ({ userData, setUserData }) => {
                     </div>
                 </div>
 
-
-                <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start justify-center">
+                <div className="flex flex-col lg:flex-row gap-12 max-sm:gap-4 items-center lg:items-start justify-center">
                     {/* ID Preview Section */}
                     <div className="flex flex-col items-center">
-                        <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-full flex items-center gap-1 shadow-sm border border-slate-100 mb-6 relative">
+                        <div className="bg-white/60 backdrop-blur-md p-1.5 max-sm:p-1 rounded-full flex items-center gap-1 shadow-sm border border-slate-100 mb-6 max-sm:mb-3 relative">
                             <div
-                                className="absolute top-1.5 bottom-1.5 w-[100px] bg-[#1a234b] rounded-full transition-all duration-300 ease-out shadow-md"
-                                style={{ left: viewSide === "front" ? '6px' : 'calc(100% - 106px)' }}
+                                className="absolute top-1.5 max-sm:top-1 bottom-1.5 max-sm:bottom-1 w-[100px] max-sm:w-[70px] bg-[#1a234b] rounded-full transition-all duration-300 ease-out shadow-md"
+                                style={{ left: viewSide === "front" ? (window.innerWidth < 640 ? '4px' : '6px') : 'calc(100% - ' + (window.innerWidth < 640 ? '74px' : '106px') + ')' }}
                             />
                             <button
                                 onClick={() => setViewSide("front")}
-                                className={`relative w-[100px] py-2 rounded-full text-[10px] font-black tracking-widest transition-colors z-10 flex items-center justify-center gap-2
+                                className={`relative w-[100px] max-sm:w-[70px] py-2 max-sm:py-1 rounded-full text-[10px] max-sm:text-[8px] font-black tracking-widest transition-colors z-10 flex items-center justify-center gap-2 max-sm:gap-1
                                     ${viewSide === "front" ? 'text-white' : 'text-slate-500 hover:text-[#1a234b]'}`}
                             >
-                                {viewSide === "front" && <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />}
+                                {viewSide === "front" && <div className="w-1.5 h-1.5 max-sm:w-1 max-sm:h-1 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />}
                                 FRONT
                             </button>
                             <button
                                 onClick={() => setViewSide("back")}
-                                className={`relative w-[100px] py-2 rounded-full text-[10px] font-black tracking-widest transition-colors z-10 flex items-center justify-center gap-2
+                                className={`relative w-[100px] max-sm:w-[70px] py-2 max-sm:py-1 rounded-full text-[10px] max-sm:text-[8px] font-black tracking-widest transition-colors z-10 flex items-center justify-center gap-2 max-sm:gap-1
                                     ${viewSide === "back" ? 'text-white' : 'text-slate-500 hover:text-[#1a234b]'}`}
                             >
-                                {viewSide === "back" && <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />}
+                                {viewSide === "back" && <div className="w-1.5 h-1.5 max-sm:w-1 max-sm:h-1 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]" />}
                                 BACK
                             </button>
                         </div>
 
+                        {/* Local Zoom Hack for fitting ID explicitly into Mobile viewport height */}
                         <div 
-                            className="print-mode relative cursor-pointer hover:scale-[1.02] transition-all group"
+                            className="print-mode relative cursor-pointer hover:scale-[1.02] transition-all group max-sm:[zoom:0.55]"
                             onClick={() => setIsFullPreview(true)}
                             title="Click for full view"
                         >
                             {isTemplateLoaded ? (
-                                <IDCard user={userData} template={template} side={viewSide} />
+                                <IDCard user={mergedUserData} template={template} side={viewSide} />
                             ) : (
                                 <div className="w-[320px] h-[500px] rounded-[24px] bg-slate-100 animate-pulse flex items-center justify-center">
                                     <Loader2 className="w-8 h-8 text-slate-300 animate-spin" />
@@ -1593,38 +1699,34 @@ const DigitalID = ({ userData, setUserData }) => {
 
                     {/* Details Side Panel */}
                     <div className="max-w-md w-full">
-                        <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm mb-6">
-                            <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-50">
-                                <h3 className="font-black text-[#1a234b] text-base">Identity Details</h3>
+                        <div className="bg-white rounded-[32px] max-sm:rounded-[20px] p-8 max-sm:p-4 border border-slate-100 shadow-sm mb-6 max-sm:mb-4">
+                            <div className="flex items-center justify-between mb-8 max-sm:mb-4 pb-4 max-sm:pb-2 border-b border-slate-50">
+                                <h3 className="font-black text-[#1a234b] text-base max-sm:text-sm">Identity Details</h3>
                             </div>
 
-                            <div className="space-y-5">
+                            <div className="space-y-5 max-sm:space-y-3">
                                 <div>
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Full Name</span>
-                                    <span className="text-sm font-bold text-slate-800">{userData?.name || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
+                                    <span className="text-sm max-sm:text-xs font-bold text-slate-800">{userData?.name || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
                                 </div>
                                 <div>
                                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Role Designation</span>
-                                    <span className="text-sm font-bold text-slate-800">{userData?.role_context || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
+                                    <span className="text-sm max-sm:text-xs font-bold text-slate-800">{userData?.role_context || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
                                 </div>
-                                <div>
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Primary Email</span>
-                                    <span className="text-sm font-bold text-slate-800">{userData?.email || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
-                                </div>
-                                <div className="pt-4 mt-2 border-t border-slate-50 grid grid-cols-2 gap-4">
+                                <div className="pt-4 max-sm:pt-2 mt-2 border-t border-slate-50 grid grid-cols-2 gap-4">
                                     <div>
                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Date of Birth</span>
-                                        <span className="text-xs font-bold text-slate-700">{userData?.attributes?.dob || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
+                                        <span className="text-xs max-sm:text-[10px] font-bold text-slate-700">{mergedUserData?.attributes?.dob || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
                                     </div>
                                     <div>
                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Phone Number</span>
-                                        <span className="text-xs font-bold text-slate-700">{userData?.attributes?.phone || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
+                                        <span className="text-xs max-sm:text-[10px] font-bold text-slate-700">{mergedUserData?.attributes?.phone || <i className="text-slate-300 font-medium">Not Provided</i>}</span>
                                     </div>
                                 </div>
                             </div>
-
-
                         </div>
+
+
                     </div>
                 </div>
             </div>
@@ -1645,21 +1747,21 @@ const DigitalID = ({ userData, setUserData }) => {
                 closable={false}
                 destroyOnClose
                 className="guidelines-modal"
-                styles={{ body: { padding: 0 } }}
+                styles={{ body: { padding: 0 }, content: { maxWidth: '95vw', margin: '0 auto' } }}
             >
-                <div className="p-8 text-center relative overflow-hidden">
-                    <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm border border-blue-100">
+                <div className="p-8 max-sm:p-5 text-center relative overflow-hidden">
+                    <div className="w-16 h-16 max-sm:w-12 max-sm:h-12 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6 max-sm:mb-4 shadow-sm border border-blue-100">
                         <CameraOutlined className="text-2xl text-[#1a234b]" />
                     </div>
 
-                    <Title level={2} className="!text-[#1a234b] !font-black !mb-2">ID Photo Guidelines</Title>
-                    <Paragraph className="text-slate-500 font-medium text-sm mb-8">
+                    <Title level={2} className="!text-[#1a234b] !font-black !mb-2 max-sm:!text-xl">ID Photo Guidelines</Title>
+                    <Paragraph className="text-slate-500 font-medium text-sm max-sm:text-xs mb-8 max-sm:mb-4">
                         Please ensure your photo meets these requirements for successful biometric verification.
                     </Paragraph>
 
-                    <div className="flex flex-col md:flex-row gap-6 mb-10">
+                    <div className="flex flex-col md:flex-row gap-6 max-sm:gap-3 mb-10 max-sm:mb-6">
                         {/* DO Column */}
-                        <div className="flex-1 bg-emerald-50/30 p-6 rounded-[32px] border border-emerald-100 flex flex-col items-center">
+                        <div className="flex-1 bg-emerald-50/30 p-6 max-sm:p-4 rounded-[32px] max-sm:rounded-2xl border border-emerald-100 flex flex-col items-center">
                             <div className="w-24 h-24 rounded-2xl overflow-hidden mb-5 border-4 border-emerald-500 shadow-lg relative">
                                 <img src={FormalPhoto} alt="Correct" className="w-full h-full object-cover" />
                                 <div className="absolute top-2 right-2 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-md">
@@ -1671,7 +1773,7 @@ const DigitalID = ({ userData, setUserData }) => {
                         </div>
 
                         {/* DON'T Column */}
-                        <div className="flex-1 bg-rose-50/30 p-6 rounded-[32px] border border-rose-100 flex flex-col items-center">
+                        <div className="flex-1 bg-rose-50/30 p-6 max-sm:p-4 rounded-[32px] max-sm:rounded-2xl border border-rose-100 flex flex-col items-center">
                             <div className="w-24 h-24 rounded-2xl overflow-hidden mb-5 border-4 border-rose-500 shadow-lg relative">
                                 <img src={InformalPhoto} alt="Incorrect" className="w-full h-full object-cover" />
                                 <div className="absolute top-2 right-2 w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center shadow-md">
@@ -1690,7 +1792,7 @@ const DigitalID = ({ userData, setUserData }) => {
                             setShowGuidelinesModal(false);
                             if (!isApplying) setIsApplying(true);
                         }}
-                        className="bg-[#1a234b] hover:!bg-blue-900 !h-14 !px-16 !text-base !font-black !rounded-2xl !tracking-widest shadow-xl shadow-blue-900/10 w-full"
+                        className="bg-[#1a234b] hover:!bg-blue-900 !h-14 max-sm:!h-12 !px-16 max-sm:!px-8 !text-base max-sm:!text-sm !font-black !rounded-2xl !tracking-widest shadow-xl shadow-blue-900/10 w-full"
                     >
                         I UNDERSTAND
                     </Button>
@@ -1707,9 +1809,9 @@ const DigitalID = ({ userData, setUserData }) => {
                 closable={false}
                 destroyOnClose
                 className="physical-id-request-modal"
-                styles={{ body: { padding: 0, maxHeight: '90vh', overflowY: 'auto' } }}
+                styles={{ body: { padding: 0, maxHeight: '90vh', overflowY: 'auto' }, content: { maxWidth: '95vw', margin: '0 auto' } }}
             >
-                <div className="p-8 relative">
+                <div className="p-8 max-sm:p-5 relative">
                     <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100">
                         <CreditCard className="w-8 h-8 text-[#1a234b]" />
                     </div>
@@ -1970,6 +2072,7 @@ const DigitalID = ({ userData, setUserData }) => {
                     </div>
                 }
                 className="pvc-tracking-modal font-black"
+                styles={{ content: { maxWidth: '95vw', margin: '0 auto' } }}
             >
                 <div className="pt-4 space-y-6">
                     {/* Fulfillment Details Panel */}
@@ -2145,9 +2248,9 @@ const DigitalID = ({ userData, setUserData }) => {
                 closable={false}
                 destroyOnClose
                 className="claiming-modal"
-                styles={{ body: { padding: 0 } }}
+                styles={{ body: { padding: 0 }, content: { maxWidth: '95vw', margin: '0 auto' } }}
             >
-                <div className="p-8 text-center relative overflow-hidden">
+                <div className="p-8 max-sm:p-4 text-center relative overflow-hidden">
                     <div className={`absolute top-8 -right-12 px-12 py-1 rotate-45 shadow-sm z-50 
                         ${physicalIDStatus === 'ready' ? 'bg-emerald-500' : 'bg-amber-500'}`}>
                         <Text className="text-white text-[9px] font-black uppercase tracking-widest">
@@ -2157,7 +2260,7 @@ const DigitalID = ({ userData, setUserData }) => {
 
                     <div ref={stubRef} className="bg-white p-5 rounded-[40px]">
                         <div className="text-center mb-4">
-                            <Title level={4} className="!text-[#1a234b] !font-black !mb-0.5">Digital Claim Stub</Title>
+                            <Title level={4} className="!text-[#1a234b] !font-black !mb-0.5">Claim Stub</Title>
                             <Text className="text-slate-400 font-bold text-[9px] uppercase tracking-widest block mb-1.5">
                                 {fulfillmentMethod === 'pickup' ? 'Collection Voucher' : 'Shipping Manifest'}
                             </Text>
@@ -2286,14 +2389,15 @@ const DigitalID = ({ userData, setUserData }) => {
                 width={400}
                 className="rounded-3xl overflow-hidden p-0"
                 bodyStyle={{ padding: 0 }}
+                styles={{ content: { maxWidth: '95vw', margin: '0 auto' } }}
             >
-                <div className="p-8 text-center bg-white relative overflow-hidden">
+                <div className="p-8 max-sm:p-5 text-center bg-white relative overflow-hidden">
                     <div className="absolute top-0 left-0 right-0 h-32 bg-emerald-50" />
                     <div className="relative z-10">
-                        <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200 animate-bounce">
+                        <div className="w-24 h-24 max-sm:w-18 max-sm:h-18 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 max-sm:mb-4 shadow-lg shadow-emerald-200 animate-bounce">
                             <CheckCircle2 className="w-12 h-12 text-emerald-600" />
                         </div>
-                        <Title level={2} className="!text-[#1a234b] !font-black !mb-2 tracking-tighter">Congratulations!</Title>
+                        <Title level={2} className="!text-[#1a234b] !font-black !mb-2 tracking-tighter max-sm:!text-xl">Congratulations!</Title>
                         <Paragraph className="text-slate-500 font-medium text-sm mb-8 px-2 leading-relaxed">
                             Your official Digital ID has been successfully issued and verified.
                         </Paragraph>
@@ -2302,7 +2406,7 @@ const DigitalID = ({ userData, setUserData }) => {
                             type="primary"
                             size="large"
                             onClick={handleCongratsOk}
-                            className="w-full !h-14 !rounded-2xl !font-black !bg-emerald-600 hover:!bg-emerald-700 border-none shadow-xl shadow-emerald-600/20 hover:scale-[1.02] transition-all"
+                            className="w-full !h-14 max-sm:!h-12 !rounded-2xl !font-black !bg-emerald-600 hover:!bg-emerald-700 border-none shadow-xl shadow-emerald-600/20 hover:scale-[1.02] transition-all"
                         >
                             View Digital ID
                         </Button>
@@ -2322,15 +2426,15 @@ const DigitalID = ({ userData, setUserData }) => {
             )}
             {/* ── FULL VIEW OVERLAY ── */}
             {isFullPreview && (
-                <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-[99999] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-300 overflow-y-auto p-4">
                     <button 
                         onClick={() => setIsFullPreview(false)}
-                        className="absolute top-10 right-10 w-14 h-14 rounded-full bg-white/10 hover:bg-rose-500 hover:text-white text-white flex items-center justify-center transition-all group active:scale-95 border border-white/10"
+                        className="absolute top-6 right-6 max-sm:top-4 max-sm:right-4 w-14 h-14 max-sm:w-10 max-sm:h-10 rounded-full bg-white/10 hover:bg-rose-500 hover:text-white text-white flex items-center justify-center transition-all group active:scale-95 border border-white/10 z-10"
                     >
-                        <X className="w-7 h-7" />
+                        <X className="w-7 h-7 max-sm:w-5 max-sm:h-5" />
                     </button>
 
-                    <div className="flex flex-col items-center gap-12 animate-in zoom-in-95 duration-500 ease-out">
+                    <div className="flex flex-col items-center gap-12 max-sm:gap-6 animate-in zoom-in-95 duration-500 ease-out">
                          {/* Toggle in Fullscreen */}
                          <div className="flex gap-2 bg-white/5 p-2 rounded-2xl backdrop-blur-2xl border border-white/10 shadow-2xl">
                             <button 
@@ -2347,7 +2451,7 @@ const DigitalID = ({ userData, setUserData }) => {
                             </button>
                          </div>
 
-                         <div className="scale-[1.15] origin-center shadow-[0_0_120px_rgba(255,255,255,0.15)] rounded-[2.5rem]">
+                         <div className="max-sm:scale-[0.7] max-sm:origin-center scale-[1.15] origin-center shadow-[0_0_120px_rgba(255,255,255,0.15)] rounded-[2.5rem]">
                             <IDCard
                                 user={userData}
                                 template={template}
@@ -2355,7 +2459,7 @@ const DigitalID = ({ userData, setUserData }) => {
                             />
                          </div>
 
-                         <div className="flex flex-col items-center text-center">
+                         <div className="flex flex-col items-center text-center max-sm:hidden">
                             <h2 className="text-4xl font-black text-white tracking-tighter">{userData?.name}</h2>
                             <p className="text-slate-400 font-bold uppercase tracking-[4px] text-[10px] mt-4 flex items-center gap-4">
                                 <span className="w-8 h-[1px] bg-white/20"></span>

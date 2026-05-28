@@ -24,7 +24,19 @@ function SecurityGuardContent() {
   
   const router = useRouter();
   const pathname = usePathname();
-  const isAuthRoute = pathname.includes("(auth)");
+  const isAuthRoute =
+    pathname.includes("(auth)") ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname.endsWith("/login") ||
+    pathname.endsWith("/signup");
+
+  // ✅ Fix 1: Reset restricted state whenever the logged-in user changes.
+  // This prevents a new account from inheriting a restricted state from a
+  // previous session, since SecurityGuard is never unmounted (it lives in root layout).
+  useEffect(() => {
+    setIsRestricted(false);
+  }, [user?.id]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -42,7 +54,12 @@ function SecurityGuardContent() {
         
         if (!isActive) return;
 
-        if (res.status === 404 || res.status === 401) {
+        // ✅ Fix 2: Only restrict on confirmed JSON responses.
+        // Tunnel errors (503, 523, HTML pages) are NOT a sign of account deletion.
+        const contentType = res.headers.get("content-type") || "";
+        const isJson = contentType.includes("application/json");
+
+        if ((res.status === 404 || res.status === 401) && isJson) {
           setIsRestricted(true);
         }
       } catch (e) {
@@ -51,8 +68,19 @@ function SecurityGuardContent() {
     };
 
     if (user?.id && !isAuthRoute) {
-      checkStatus(); // Initial check on mount/route change
-      interval = setInterval(checkStatus, 5000); // Slower poll for better performance
+      // ✅ Fix 3: Delay the very first check by 4 seconds to avoid false positives
+      // immediately after login (tunnel may still be warming up).
+      const startupDelay = setTimeout(() => {
+        if (!isActive) return;
+        checkStatus();
+        interval = setInterval(checkStatus, 5000);
+      }, 4000);
+
+      return () => {
+        isActive = false;
+        clearTimeout(startupDelay);
+        if (interval) clearInterval(interval);
+      };
     }
     
     return () => {

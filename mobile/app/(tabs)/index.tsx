@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, Animated, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, Animated, RefreshControl, Alert } from 'react-native';
 import React, { useState, useEffect, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -9,7 +9,7 @@ import { API_BASE_URL } from '../../constants/Config';
 export default function DashboardScreen() {
   const router = useRouter();
   // Get the logged-in user's data from our global state
-  const { user, login } = useAuthStore();
+  const { user, login } = useAuthStore() as any;
   const [refreshing, setRefreshing] = useState(false);
 
   // Dynamic Greeting Logic
@@ -138,7 +138,7 @@ export default function DashboardScreen() {
                 <Text className="text-xl font-extrabold text-[#1a234b] dark:text-white mr-1.5">
                   Hi {user?.name || 'User'}
                 </Text>
-                <Animated.View style={{ transform: [{ rotate: waveRotation }] }}>
+                <Animated.View style={{ transform: [{ rotate: waveRotation }] }} pointerEvents="none">
                   <Text style={{ fontSize: 20 }}>👋</Text>
                 </Animated.View>
               </View>
@@ -187,8 +187,8 @@ export default function DashboardScreen() {
           className="bg-[#1a234b] dark:bg-blue-900/40 border border-transparent dark:border-blue-800/30 rounded-[32px] p-6 mb-8 shadow-xl shadow-[#1a234b]/20 dark:shadow-none relative overflow-hidden group active:scale-[0.98] transition-all"
         >
           {/* Decorative Elements */}
-          <View className="absolute top-0 right-0 w-32 h-32 bg-white/5 dark:bg-blue-500/10 rounded-full -mr-12 -mt-12" />
-          <View className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 dark:bg-blue-500/10 rounded-full -ml-8 -mb-8" />
+          <View className="absolute top-0 right-0 w-32 h-32 bg-white/5 dark:bg-blue-500/10 rounded-full -mr-12 -mt-12" pointerEvents="none" />
+          <View className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 dark:bg-blue-500/10 rounded-full -ml-8 -mb-8" pointerEvents="none" />
 
           <View className="flex-row justify-between items-center z-10">
             <View className="flex-1">

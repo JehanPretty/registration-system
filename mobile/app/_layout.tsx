@@ -1,4 +1,5 @@
 import "../global.css";
+import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -7,6 +8,14 @@ import { ThemeProvider, DarkTheme, DefaultTheme } from "@react-navigation/native
 import { useColorScheme } from "nativewind";
 import { useAuthStore } from "../store/authStore";
 import { useEffect } from "react";
+
+// ─── Reanimated Configuration ──────────────────────────────────────────
+// Disable strict mode to silence the "Reading from value during render" 
+// warnings often triggered by NativeWind v4 in React 19.
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 
 export default function RootLayout() {
   const { colorScheme, setColorScheme } = useColorScheme();

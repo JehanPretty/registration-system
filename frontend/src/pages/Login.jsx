@@ -30,12 +30,7 @@ function Login() {
   useEffect(() => {
     const savedUser = localStorage.getItem("regisSys_user");
     if (savedUser) {
-      const user = JSON.parse(savedUser);
-      if (user.role_context === "Super Admin" || (user.attributes && user.attributes.is_profile_complete)) {
-        clearSession();
-      } else {
-        navigate("/dashboard");
-      }
+      navigate("/dashboard", { replace: true });
     }
   }, [navigate]);
 
@@ -102,31 +97,31 @@ function Login() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-4 md:p-8 font-sans">
+    <div className="min-h-screen bg-[#f1f5f9] flex items-center justify-center p-2 sm:p-4 md:p-8 font-sans">
       {/* Main Card Container */}
-      <div className="w-full max-w-[1000px] bg-white rounded-[40px] shadow-[0_40px_100px_-20px_rgba(31,42,86,0.15)] overflow-hidden flex flex-col md:flex-row min-h-[600px] animate-in fade-in zoom-in-95 duration-700">
+      <div className="w-full max-w-[1000px] bg-white rounded-[24px] md:rounded-[40px] shadow-[0_40px_100px_-20px_rgba(31,42,86,0.15)] overflow-hidden flex flex-col md:flex-row md:min-h-[600px] animate-in fade-in zoom-in-95 duration-700">
 
-        {/* Left Side: Branding & Illustration (Primary Navy) */}
-        <div className="w-full md:w-1/2 p-12 lg:p-16 flex flex-col justify-center items-center bg-[#1f2a56] text-center relative overflow-hidden">
+        {/* Left Side: Branding & Illustration (Primary Navy) - Hidden on Mobile */}
+        <div className="hidden md:flex w-full md:w-1/2 p-12 lg:p-16 flex-col justify-center items-center bg-[#1f2a56] text-center relative overflow-hidden">
           {/* Subtle Background Accent */}
           <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="max-w-[320px] relative z-10">
+          <div className="max-w-[320px] relative z-10 w-full flex flex-col items-center">
             <img
               src={illustration}
               alt="RegiSys Services"
-              className="w-full h-auto mb-8 animate-in slide-in-from-left duration-1000 brightness-110 drop-shadow-2xl rounded-[32px]"
+              className="w-32 md:w-full h-auto mb-6 md:mb-8 animate-in slide-in-from-left duration-1000 brightness-110 drop-shadow-2xl rounded-[20px] md:rounded-[32px] mx-auto"
             />
-            <h2 className="text-3xl font-black text-white mb-4 tracking-tighter italic">Registration System</h2>
-            <p className="text-blue-100/60 text-sm font-medium leading-loose">
+            <h2 className="text-2xl md:text-3xl font-black text-white mb-2 md:mb-4 tracking-tighter italic">Registration System</h2>
+            <p className="text-blue-100/60 text-[10px] md:text-sm font-medium leading-loose md:leading-relaxed">
               Access your unified institutional dashboard and manage your digital identity with ease.
             </p>
           </div>
         </div>
 
         {/* Right Side: Action Area (Soft White) */}
-        <div className="w-full md:w-1/2 bg-[#f8fafc] p-10 lg:p-16 flex flex-col justify-center relative">
+        <div className="w-full md:w-1/2 bg-[#f8fafc] p-6 sm:p-10 lg:p-16 flex flex-col justify-center relative">
           {/* Decorative Back Button */}
           <button
             onClick={() => navigate("/")}
@@ -134,6 +129,12 @@ function Login() {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
+
+          {/* Mobile Only Header */}
+          <div className="md:hidden flex flex-col items-center mb-8">
+            <h2 className="text-xl font-black text-[#1f2a56] italic">Registration System</h2>
+            <div className="h-1 w-12 bg-[#1f2a56] rounded-full mt-1" />
+          </div>
 
           <div className="max-w-[360px] mx-auto w-full">
             <h1 className="text-4xl font-black text-slate-900 mb-2 tracking-tighter">Welcome!</h1>

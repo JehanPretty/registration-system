@@ -298,9 +298,10 @@ export default function SettingsScreen() {
               { event: "2FA Enabled", status: "Security Boost", time: "1 week ago", type: "success" },
             ].map((log, i) => (
               <View key={i} className="pl-6 relative">
-                {i !== 3 && <View className="absolute left-1 top-4 bottom-[-24px] w-0.5 bg-slate-100 dark:bg-slate-700" />}
+                {i !== 3 && <View className="absolute left-1 top-4 bottom-[-24px] w-0.5 bg-slate-100 dark:bg-slate-700" pointerEvents="none" />}
                 <View className={`absolute left-0 top-1 w-2.5 h-2.5 rounded-full border-[1.5px] border-white dark:border-slate-900 
                   ${log.type === 'success' ? 'bg-green-500' : log.type === 'info' ? 'bg-blue-500' : 'bg-orange-500'}`}
+                  pointerEvents="none"
                   style={{
                     shadowColor: log.type === 'success' ? '#22c55e' : log.type === 'info' ? '#3b82f6' : '#f97316',
                     shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 4, elevation: 2

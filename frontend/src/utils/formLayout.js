@@ -12,4 +12,4 @@ export const getFieldSpan = (label, type) => {
 };
 
 export const getSectionGridClass = () =>
-  "grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-12";
+  "grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4";

@@ -230,38 +230,69 @@ const IDBuilder = () => {
         const file = e.target.files[0];
         if (!file) return;
         setRemovingSigBg(true);
-        const rawReader = new FileReader();
-        rawReader.onload = async (ev) => {
-            try {
-                const transparent = await removeBackground(ev.target.result);
-                
-                // Convert base64 back to Blob to upload to server
-                const fetchRes = await fetch(transparent);
-                const blob = await fetchRes.blob();
-                const formData = new FormData();
-                formData.append('file', blob, 'signature.png');
-                
-                const uploadRes = await fetch(`${API_BASE_URL}/uploads`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'bypass-tunnel-reminder': 'true' }
-                });
-                
-                if (uploadRes.ok) {
-                    const data = await uploadRes.json();
-                    updateTemplate('authorized_signature_url', data.file_url);
-                } else {
-                    message.error("Failed to upload signature.");
+        try {
+            // Prefer the same high-quality signature extraction pipeline used during user uploads.
+            const formData = new FormData();
+            formData.append("file", file);
+            const detectRes = await fetch(`${API_BASE_URL}/detect-face/detect-signature`, {
+                method: "POST",
+                body: formData,
+                headers: { "bypass-tunnel-reminder": "true" }
+            });
+            if (detectRes.ok) {
+                const detectData = await detectRes.json();
+                if (detectData?.is_signature && detectData?.processed_url) {
+                    updateTemplate("authorized_signature_url", detectData.processed_url);
+                    message.success("Signature uploaded with instant background removal.");
+                    setRemovingSigBg(false);
+                    e.target.value = "";
+                    return;
                 }
-            } catch (err) {
-                console.error('Signature process failed:', err);
-                message.error("Network error during signature upload.");
-            } finally {
-                setRemovingSigBg(false);
-                e.target.value = ""; // Reset input
+                if (detectData?.reason) {
+                    message.warning(detectData.reason);
+                    setRemovingSigBg(false);
+                    e.target.value = "";
+                    return;
+                }
             }
-        };
-        rawReader.readAsDataURL(file);
+
+            // Fallback to local background stripping if the signature endpoint is unavailable.
+            const rawReader = new FileReader();
+            rawReader.onload = async (ev) => {
+                try {
+                    const transparent = await removeBackground(ev.target.result);
+                    const fetchRes = await fetch(transparent);
+                    const blob = await fetchRes.blob();
+                    const uploadData = new FormData();
+                    uploadData.append("file", blob, "signature.png");
+                    const uploadRes = await fetch(`${API_BASE_URL}/uploads`, {
+                        method: "POST",
+                        body: uploadData,
+                        headers: { "bypass-tunnel-reminder": "true" }
+                    });
+                    if (uploadRes.ok) {
+                        const data = await uploadRes.json();
+                        updateTemplate("authorized_signature_url", data.file_url);
+                        message.success("Signature uploaded.");
+                    } else {
+                        message.error("Failed to upload signature.");
+                    }
+                } catch (err) {
+                    console.error("Signature fallback process failed:", err);
+                    message.error("Network error during signature upload.");
+                } finally {
+                    setRemovingSigBg(false);
+                    e.target.value = "";
+                }
+            };
+            rawReader.readAsDataURL(file);
+            return;
+        } catch (err) {
+            console.error("Signature process failed:", err);
+            message.error("Network error during signature upload.");
+            setRemovingSigBg(false);
+            e.target.value = ""; // Reset input
+        }
     };
 
     const handleFrontBgUpload = async (e) => {

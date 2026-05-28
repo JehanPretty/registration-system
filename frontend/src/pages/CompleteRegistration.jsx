@@ -47,12 +47,11 @@ const ProgressTracker = ({ steps, activeIndex }) => {
   const verifyIdx = steps.findIndex(s => s.type === 'verify');
 
   return (
-    <div className="py-8 px-6 bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm overflow-x-auto">
-      <div className="max-w-4xl mx-auto relative px-4 flex items-center justify-between min-w-[700px]">
-
+    <div className="py-3 md:py-5 px-2 md:px-6 bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm overflow-hidden">
+      <div className="max-w-4xl mx-auto relative px-4 flex items-center justify-between w-full">
         {/* Background Track - Phase 1 */}
-        <div className="absolute top-[18px] left-[55px] right-[48px] flex items-center z-0 pointer-events-none">
-          <div className="h-[3px] bg-slate-50 rounded-full overflow-hidden flex-1 mr-[100px]">
+        <div className="absolute top-[14px] md:top-[18px] left-[40px] right-[40px] flex items-center z-0 pointer-events-none">
+          <div className="h-[2px] md:h-[3px] bg-slate-50 rounded-full overflow-hidden flex-1 mr-[30px] md:mr-[100px]">
             <div
               className="h-full bg-[#1a234b] transition-all duration-700 ease-in-out"
               style={{
@@ -63,7 +62,7 @@ const ProgressTracker = ({ steps, activeIndex }) => {
             />
           </div>
           {/* Phase 2 Line */}
-          <div className="h-[3px] bg-slate-50 rounded-full overflow-hidden w-[100px]">
+          <div className="h-[2px] md:h-[3px] bg-slate-50 rounded-full overflow-hidden w-[30px] md:w-[100px]">
             <div
               className="h-full bg-[#1a234b] transition-all duration-700 ease-in-out"
               style={{
@@ -82,23 +81,23 @@ const ProgressTracker = ({ steps, activeIndex }) => {
 
           return (
             <React.Fragment key={idx}>
-              {isVerifiedPhaseStart && <div className="w-12" />}
-              <div className="relative z-10 flex flex-col items-center group" style={{ width: '90px' }}>
+              {isVerifiedPhaseStart && <div className="w-2 md:w-12" />}
+              <div className="relative z-10 flex flex-col items-center group flex-1 min-w-0">
                 <div
-                  className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${isActive
+                  className={`w-7 h-7 md:w-9 md:h-9 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${isActive
                     ? 'bg-[#1a234b] border-[#1a234b] text-white shadow-lg'
                     : 'bg-white border-slate-100 text-slate-300'
                     } ${isCurrent ? 'scale-110 ring-4 ring-blue-50/50 shadow-xl shadow-blue-900/10' : ''}`}
                 >
                   {idx < activeIndex ? (
-                    <Check className="w-4 h-4 text-white" />
+                    <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                   ) : (
-                    <span className="text-xs font-black">{idx + 1}</span>
+                    <span className="text-[10px] md:text-xs font-black">{idx + 1}</span>
                   )}
                 </div>
 
                 <span
-                  className={`mt-3 text-[9px] font-black uppercase tracking-[0.15em] whitespace-nowrap transition-colors duration-500 ${isActive ? 'text-[#1a234b]' : 'text-slate-300'
+                  className={`mt-2 md:mt-3 text-[7px] md:text-[9px] font-black tracking-normal md:tracking-[0.15em] whitespace-nowrap transition-colors duration-500 overflow-hidden text-ellipsis w-full text-center px-1 ${isActive ? 'text-[#1a234b]' : 'text-slate-300'
                     }`}
                 >
                   {step.title?.split(' ')[0] || step.label}
@@ -117,7 +116,7 @@ const ProgressTracker = ({ steps, activeIndex }) => {
 };
 
 const SectionHeader = ({ title }) => (
-  <div className="mb-4 animate-in fade-in slide-in-from-left-2 duration-500">
+  <div className="mb-3 animate-in fade-in slide-in-from-left-2 duration-500">
     <div className="flex items-center gap-2 mb-1">
       <div className="w-2 h-2 bg-blue-600 rotate-45 shadow-[0_0_8px_rgba(37,99,235,0.4)]" />
       <h3 className="text-[#1a234b] font-black text-sm">{title}</h3>
@@ -127,8 +126,8 @@ const SectionHeader = ({ title }) => (
 );
 
 const InputGroup = ({ label, required, children, error, hideStatus }) => (
-  <div className={`mb-4 transition-all duration-300 ${error ? 'animate-in shake-subtle' : ''}`} id={`input-group-${label}`}>
-    <label className="block text-[10px] font-black text-slate-500 mb-1.5 ml-1 transition-colors">
+  <div className={`mb-3 transition-all duration-300 ${error ? 'animate-in shake-subtle' : ''}`} id={`input-group-${label}`}>
+    <label className="block text-[10px] font-black text-slate-500 mb-1 ml-1 transition-colors">
       {label} {!hideStatus && (required ? <span className="text-red-500">*</span> : <span className="text-slate-300 font-medium">(Optional)</span>)}
     </label>
     {children}
@@ -223,13 +222,13 @@ const CountryCodeSelector = ({ value, onChange }) => {
 
 const SummaryView = ({ sections, values }) => {
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {sections.map((section) => {
         const sectionTitle = section?.title || section?.sectionTitle || "";
         const addressSection = isAddressSection(sectionTitle);
 
         return (
-          <div key={section.id} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+          <div key={section.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-1.5 h-4 bg-blue-600 rounded-full" />
               <h4 className="text-xs font-black text-[#1a234b] uppercase tracking-wider">{sectionTitle}</h4>
@@ -405,6 +404,7 @@ export default function CompleteRegistration() {
 
   // Biometric matching state
   const [isMatchingFace, setIsMatchingFace] = useState(false);
+  const [faceMatchStatus, setFaceMatchStatus] = useState("");
   const [faceMatchResult, setFaceMatchResult] = useState(null); // 'pass' | 'fail'
   const [faceMatchError, setFaceMatchError] = useState("");
 
@@ -423,19 +423,36 @@ export default function CompleteRegistration() {
   const TOTAL_FRAMES = 26;
 
   const startWebCamera = async () => {
+    setShowWebCamera(true);
     if (!modelsLoaded) {
       try {
-        await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-        await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-        await faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models');
-        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+        setLivenessInstruction('Loading Security Models...'); // SPEED OPTIMIZATION: Load only Tiny models for instant camera startup
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+          faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models'),
+        ]);
+        
+        // Defer heavier models for the final match step
+        window.heavierModelsPromise = (async () => {
+          try {
+            await Promise.all([
+              faceapi.nets.ssdMobilenetv1.loadFromUri('/models'),
+              faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
+              faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
+            ]);
+            console.log("Heavier models loaded in background");
+            return true;
+          } catch (e) {
+            console.warn("Background model load failed:", e);
+            return false;
+          }
+        })();
+
         setModelsLoaded(true);
       } catch (err) {
         console.error("Failed to load Face AI models", err);
       }
     }
-    // Reset liveness state for fresh scan
     setLivenessProgress(0);
     setLivenessInstruction('Position your face in the frame');
     setLivenessPhase('idle');
@@ -443,7 +460,6 @@ export default function CompleteRegistration() {
     setFaceMatchResult(null);
     setFaceMatchError('');
     livenessRef.current = { challengeIndex: 0, holdFrames: 0, accumulated: 0 };
-    setShowWebCamera(true);
     setIsFaceCentered(false);
   };
 
@@ -451,18 +467,60 @@ export default function CompleteRegistration() {
   useEffect(() => {
     let stream = null;
     const initStream = async () => {
+      // alert("DEBUG: initStream called");
+      
+      // Feature detection with legacy fallbacks
+      const getUserMedia = navigator.mediaDevices?.getUserMedia || 
+                          navigator.webkitGetUserMedia || 
+                          navigator.mozGetUserMedia || 
+                          navigator.msGetUserMedia;
+
+      if (!getUserMedia) {
+        alert("Camera access is blocked. Please ensure you are using a secure connection (HTTPS) or have enabled Chrome Flags for this IP.");
+        closeWebCamera();
+        return;
+      }
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" }
-        });
+        const constraints = { 
+          video: { 
+            facingMode: "user",
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          } 
+        };
+        
+        let localStream;
+        if (navigator.mediaDevices?.getUserMedia) {
+          localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        } else {
+          // Fallback to legacy API
+          localStream = await new Promise((resolve, reject) => {
+            getUserMedia.call(navigator, constraints, resolve, reject);
+          });
+        }
+        
+        stream = localStream; // assign to outer variable for cleanup
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+          videoRef.current.srcObject = localStream;
           videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play().catch(e => {
+               console.error("Video play error:", e);
+            });
             startFaceDetectionLoop();
           };
         }
       } catch (err) {
-        console.error("Error accessing webcam:", err);
+        console.error("Camera Hardware Error:", err);
+        let userMsg = `Camera Error: ${err.name}\n${err.message}`;
+        
+        if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          userMsg += "\n\nSuggestions:\n1. Close all other apps using the camera.\n2. Restart your phone.\n3. Ensure Chrome has Camera permission in Android Settings.";
+        } else if (err.name === 'NotAllowedError') {
+          userMsg += "\n\nPlease allow camera access when prompted by Chrome.";
+        }
+        
+        alert(userMsg);
+        closeWebCamera();
       }
     };
 
@@ -529,6 +587,17 @@ export default function CompleteRegistration() {
     setIsMatchingFace(true);
     setFaceMatchResult(null);
     setFaceMatchError('');
+    setFaceMatchStatus('Initializing AI security...');
+
+    // Ensure models are loaded if they were deferred
+    if (window.heavierModelsPromise) {
+      console.log('[FaceMatch] Waiting for detailed models to finish loading...');
+      const loaded = await window.heavierModelsPromise;
+      if (!loaded) {
+        throw new Error('Security models failed to load. Please check your internet connection.');
+      }
+    }
+    setFaceMatchStatus('Processing biometric data...');
 
     try {
       const loadImage = (url) => new Promise((resolve, reject) => {
@@ -546,6 +615,7 @@ export default function CompleteRegistration() {
 
       console.log('[FaceMatch] ID image:', idImg.width, 'x', idImg.height);
       console.log('[FaceMatch] Selfie image:', selfieImg.width, 'x', selfieImg.height);
+      setFaceMatchStatus('Analyzing ID photo...');
 
       // Helper: try to detect a face with multiple strategies
       const detectFace = async (input, label) => {
@@ -566,45 +636,37 @@ export default function CompleteRegistration() {
         }
 
         det = await faceapi
-          .detectSingleFace(input, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 }))
+          .detectSingleFace(input, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.2 }))
           .withFaceLandmarks(true)
           .withFaceDescriptor();
         if (det) { console.log(`[FaceMatch] ${label}: Tiny detected`); return det; }
-
-        console.log(`[FaceMatch] ${label}: NO FACE DETECTED`);
+        
         return null;
       };
 
-      // Upscale the KYC ID image (often small/compressed)
-      const upscaleCanvas = document.createElement('canvas');
-      upscaleCanvas.width = idImg.width * 2;
-      upscaleCanvas.height = idImg.height * 2;
-      upscaleCanvas.getContext('2d').drawImage(idImg, 0, 0, upscaleCanvas.width, upscaleCanvas.height);
-
-      // Detect face on ID — try upscaled first, then original
-      let idDetection = await detectFace(upscaleCanvas, 'ID-upscaled');
-      if (!idDetection) {
-        idDetection = await detectFace(idImg, 'ID-original');
-      }
+      // Detect face on ID — Skip heavy upscaling on mobile to prevent OOM
+      let idDetection = await detectFace(idImg, 'ID');
 
       if (!idDetection) {
         throw new Error('No face detected on the uploaded ID. Please re-upload a clear photo of your ID with your face fully visible.');
       }
 
       // Detect face in selfie
+      setFaceMatchStatus('Analyzing selfie biometric...');
       const selfieDetection = await detectFace(selfieImg, 'Selfie');
 
       if (!selfieDetection) {
         throw new Error('Could not detect your face in the captured photo. Please ensure good lighting and try again.');
       }
 
+      setFaceMatchStatus('Comparing identities...');
       const distance = faceapi.euclideanDistance(idDetection.descriptor, selfieDetection.descriptor);
       const confidence = Math.max(0, Math.round((1 - distance) * 100));
       console.log(`[FaceMatch] ⚡ Distance: ${distance.toFixed(4)}, Confidence: ${confidence}%`);
 
-      // Threshold: 0.6 — same person is typically 0.1-0.45, different person is 0.65+
-      if (distance > 0.6) {
-        throw new Error(`Face does not match the attached ID document. The selfie and the ID photo are not the same person.`);
+      // Threshold: 0.65 — slightly more permissive for mobile front cameras
+      if (distance > 0.65) {
+        throw new Error(`Face does not match the attached ID document.`);
       }
 
       setFaceMatchResult('pass');
@@ -795,7 +857,7 @@ export default function CompleteRegistration() {
 
       try {
         const result = await faceapi
-          .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+          .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.3 }))
           .withFaceLandmarks(true);
 
         if (result) {
@@ -806,14 +868,14 @@ export default function CompleteRegistration() {
           if (videoWidth > 0 && videoHeight > 0) {
             const faceCenterX = box.x + box.width / 2;
             const faceCenterY = box.y + box.height / 2;
-            const roiX = videoWidth * 0.35;
-            const roiY = videoHeight * 0.32;
-            const tooFarLeft = faceCenterX < (roiX - 10);
-            const tooFarRight = faceCenterX > (videoWidth - roiX + 10);
-            const tooHigh = faceCenterY < (roiY - 10);
-            const tooLow = faceCenterY > (videoHeight - roiY + 10);
-            const tooSmall = box.width < (videoWidth * 0.23);
-            const tooLarge = box.width > (videoWidth * 0.52);
+            const roiX = videoWidth * 0.25; // Smaller margin = larger ROI
+            const roiY = videoHeight * 0.22;
+            const tooFarLeft = faceCenterX < (roiX - 20);
+            const tooFarRight = faceCenterX > (videoWidth - roiX + 20);
+            const tooHigh = faceCenterY < (roiY - 20);
+            const tooLow = faceCenterY > (videoHeight - roiY + 20);
+            const tooSmall = box.width < (videoWidth * 0.15); 
+            const tooLarge = box.width > (videoWidth * 0.75);
 
             let hint = 'Perfect! Hold still';
             let centered = true;
@@ -899,12 +961,26 @@ export default function CompleteRegistration() {
     }
   };
 
-  // Redirect if not logged in
+  // Redirect if not logged in or if already completed
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      navigate("/login", { replace: true });
+    } else if (user?.attributes?.is_profile_complete || user?.attributes?.kyc_pipeline_passed) {
+      navigate("/dashboard", { replace: true });
     }
   }, [user, navigate]);
+
+  // AUTOMATIC FACE MATCH TRIGGER
+  useEffect(() => {
+    if (livenessPhase === 'success' && frozenFrame) {
+      console.log('[Liveness] Success detected! Triggering automatic face match...');
+      // Small delay to let user see 'Liveness Verified!' message
+      const timer = setTimeout(() => {
+        captureWebPhoto();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [livenessPhase, frozenFrame]);
 
   // Fetch Dynamic Form when role is resolved (post-login)
   useEffect(() => {
@@ -1161,7 +1237,7 @@ export default function CompleteRegistration() {
     if (!kycDocType) { setKycDocTypeError(true); return; }
     if (!kycFile) { setKycFileError(true); return; }
     if (scanMatchResult !== 'pass') {
-      alert('The first name and last name on your ID must match your profile before continuing.');
+      setScanMatchError('The first name and last name on your ID must match your profile before continuing.');
       return;
     }
     setKycSubStep(2);
@@ -1170,7 +1246,7 @@ export default function CompleteRegistration() {
 
   const proceedToLoginCredentials = async () => {
     if (!kycFile || scanMatchResult !== 'pass') {
-      alert('Please upload and verify your ID first.');
+      setScanMatchError('Please upload and verify your ID first.');
       setKycSubStep(1);
       return;
     }
@@ -1194,15 +1270,13 @@ export default function CompleteRegistration() {
       if (isAddressSection(section.title)) {
         const requiredAddressFields = ["Country", "Province", "City / Municipality", "Zip Code", "Street Name"];
         requiredAddressFields.forEach(f => {
+          // Only check this specific field — do NOT fall back to other address fields
           const val = dynamicValues[f]
             || dynamicValues[f.toLowerCase()]
-            || dynamicValues[f.replace(/\//g, ' ').replace(/\s+/g, ' ').trim()]
-            || dynamicValues["Province"] || dynamicValues["Region"] || dynamicValues["State"] || dynamicValues["State / Province"]
-            || dynamicValues["City"] || dynamicValues["Municipality"] || dynamicValues["City / Municipality"]
-            || dynamicValues["ZipCode"] || dynamicValues["Zip code"];
+            || dynamicValues[f.replace(/\//g, ' ').replace(/\s+/g, ' ').trim()];
 
-          if (!val || val === "" || (typeof val === 'string' && val.trim() === "")) {
-            newErrors[f] = f;
+          if (!val || (typeof val === 'string' && val.trim() === "")) {
+            newErrors[f] = `${f} is required`;
           }
         });
       } else {
@@ -1226,8 +1300,12 @@ export default function CompleteRegistration() {
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      const missing = Object.keys(newErrors).join(", ");
-      alert(`Please complete the following fields: ${missing}`);
+      // Scroll to the first field with an error so the user sees the red indicators
+      setTimeout(() => {
+        const firstErrorKey = Object.keys(newErrors)[0];
+        const el = document.getElementById(`input-group-${firstErrorKey}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
       return;
     }
 
@@ -1451,7 +1529,7 @@ export default function CompleteRegistration() {
   if (isSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-6">
-        <div className="bg-white rounded-[40px] p-12 shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-sm relative text-center border border-slate-100">
+        <div className="bg-white rounded-2xl p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-sm relative text-center border border-slate-100">
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-[#76d246] rounded-full flex items-center justify-center shadow-xl border-[6px] border-[#f8fafc]">
             <Check className="w-12 h-12 text-white stroke-[4px]" />
           </div>
@@ -1480,21 +1558,6 @@ export default function CompleteRegistration() {
 
   return (
     <div className="flex flex-col h-screen bg-[#f8fafc] font-sans overflow-hidden">
-      <div className="py-2 px-6 bg-[#1a234b] flex items-center justify-between shadow-lg relative z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-            <User className="w-4 h-4 text-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[9px] font-black text-white/40 tracking-widest">Active Identity</span>
-            <span className="text-[10px] font-bold text-white truncate max-w-[150px]">{user?.email}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 animate-pulse" />
-          <span className="text-[10px] font-black text-emerald-400 tracking-widest">Secure Session</span>
-        </div>
-      </div>
 
       <ProgressTracker steps={steps} activeIndex={activeStepIndex} />
 
@@ -1503,14 +1566,14 @@ export default function CompleteRegistration() {
 
           {/* DYNAMIC SECTION STEPS */}
           {currentStep?.type === 'dynamic' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-4">
               <div className="mb-8 text-center md:text-left">
-                <div className="h-1.5 w-12 bg-blue-600 rounded-full mx-auto md:ml-0 mb-6" />
+                <div className="h-1.5 w-12 bg-blue-600 rounded-full mx-auto md:ml-0 mb-4" />
                 <h2 className="text-2xl font-black text-[#1a234b] tracking-tighter leading-none mb-3">{currentStep.title}</h2>
                 <p className="text-slate-400 text-xs font-bold">Provide your {currentStep.title.toLowerCase()} for the registration</p>
               </div>
 
-              <div className="bg-white rounded-[24px] shadow-[0_30px_70px_-15px_rgba(26,35,75,0.08)] border border-slate-100 p-8">
+              <div className="bg-white rounded-2xl shadow-[0_20px_50px_-15px_rgba(26,35,75,0.08)] border border-slate-100 p-6">
                 <SectionHeader title={currentStep.title} />
                 {isAddressSection(currentStep.title) ? (
                   <AddressForm
@@ -1528,62 +1591,62 @@ export default function CompleteRegistration() {
                       const isHidden = (fieldIsMiddleName(field.label) && noMiddleName) || (fieldIsSuffix(field.label) && noSuffix);
                       return (
                         <div key={field.id} className={getFieldSpan(field.label, field.type)}>
-                        <InputGroup
-                          label={field.label}
-                          required={!isHidden && field.required}
-                          error={!isHidden ? (errors[field.id] || errors[field.label]) : null}
-                          hideStatus={isHidden}
-                        >
-                          {isHidden ? (
-                            <div className="w-full p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-sm font-semibold text-slate-300 select-none">
-                              N/A
-                            </div>
-                          ) : (
-                            renderInput(field)
-                          )}
-                          {fieldIsMiddleName(field.label) && (
-                            <label className="flex items-center gap-2 mt-1.5 cursor-pointer select-none group">
-                              <input
-                                type="checkbox"
-                                checked={noMiddleName}
-                                onChange={(e) => {
-                                  const val = e.target.checked;
-                                  setNoMiddleName(val);
-                                  localStorage.setItem('regisSys_noMiddleName', JSON.stringify(val));
-                                  if (val) {
-                                    setDynamicValues(prev => ({ ...prev, [field.id]: 'N/A' }));
-                                    setErrors(prev => ({ ...prev, [field.id]: null }));
-                                  } else {
-                                    setDynamicValues(prev => ({ ...prev, [field.id]: '' }));
-                                  }
-                                }}
-                                className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
-                              />
-                              <span className="text-[9px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">I don't have a middle name</span>
-                            </label>
-                          )}
-                          {fieldIsSuffix(field.label) && (
-                            <label className="flex items-center gap-2 mt-1.5 cursor-pointer select-none group">
-                              <input
-                                type="checkbox"
-                                checked={noSuffix}
-                                onChange={(e) => {
-                                  const val = e.target.checked;
-                                  setNoSuffix(val);
-                                  localStorage.setItem('regisSys_noSuffix', JSON.stringify(val));
-                                  if (val) {
-                                    setDynamicValues(prev => ({ ...prev, [field.id]: 'N/A' }));
-                                    setErrors(prev => ({ ...prev, [field.id]: null }));
-                                  } else {
-                                    setDynamicValues(prev => ({ ...prev, [field.id]: '' }));
-                                  }
-                                }}
-                                className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
-                              />
-                              <span className="text-[9px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">I don't have a suffix</span>
-                            </label>
-                          )}
-                        </InputGroup>
+                          <InputGroup
+                            label={field.label}
+                            required={!isHidden && field.required}
+                            error={!isHidden ? (errors[field.id] || errors[field.label]) : null}
+                            hideStatus={isHidden}
+                          >
+                            {isHidden ? (
+                              <div className="w-full p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-sm font-semibold text-slate-300 select-none">
+                                N/A
+                              </div>
+                            ) : (
+                              renderInput(field)
+                            )}
+                            {fieldIsMiddleName(field.label) && (
+                              <label className="flex items-center gap-2 mt-1.5 cursor-pointer select-none group">
+                                <input
+                                  type="checkbox"
+                                  checked={noMiddleName}
+                                  onChange={(e) => {
+                                    const val = e.target.checked;
+                                    setNoMiddleName(val);
+                                    localStorage.setItem('regisSys_noMiddleName', JSON.stringify(val));
+                                    if (val) {
+                                      setDynamicValues(prev => ({ ...prev, [field.id]: 'N/A' }));
+                                      setErrors(prev => ({ ...prev, [field.id]: null }));
+                                    } else {
+                                      setDynamicValues(prev => ({ ...prev, [field.id]: '' }));
+                                    }
+                                  }}
+                                  className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
+                                />
+                                <span className="text-[9px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">I don't have a middle name</span>
+                              </label>
+                            )}
+                            {fieldIsSuffix(field.label) && (
+                              <label className="flex items-center gap-2 mt-1.5 cursor-pointer select-none group">
+                                <input
+                                  type="checkbox"
+                                  checked={noSuffix}
+                                  onChange={(e) => {
+                                    const val = e.target.checked;
+                                    setNoSuffix(val);
+                                    localStorage.setItem('regisSys_noSuffix', JSON.stringify(val));
+                                    if (val) {
+                                      setDynamicValues(prev => ({ ...prev, [field.id]: 'N/A' }));
+                                      setErrors(prev => ({ ...prev, [field.id]: null }));
+                                    } else {
+                                      setDynamicValues(prev => ({ ...prev, [field.id]: '' }));
+                                    }
+                                  }}
+                                  className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
+                                />
+                                <span className="text-[9px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">I don't have a suffix</span>
+                              </label>
+                            )}
+                          </InputGroup>
                         </div>
                       );
                     })}
@@ -1969,12 +2032,23 @@ export default function CompleteRegistration() {
                               : 'border-slate-200 bg-slate-50/50 hover:bg-blue-50/10 hover:border-blue-400'}`}
                   >
                     {isVerifying || isMatchingFace ? (
-                      <>
-                        <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-                        <p className="text-sm font-bold text-blue-600 mt-2">
-                          {isMatchingFace ? 'Matching selfie to ID photo...' : 'Processing...'}
-                        </p>
-                      </>
+                      <div className="flex flex-col items-center gap-4 py-8 animate-in fade-in zoom-in-95 duration-500">
+                        <div className="relative">
+                          <div className="w-20 h-20 border-4 border-slate-100 rounded-full" />
+                          <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin" />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <ShieldCheck className="w-8 h-8 text-blue-600 animate-pulse" />
+                          </div>
+                        </div>
+                        <div className="text-center space-y-1">
+                          <p className="text-sm font-black text-[#1a234b]">
+                            {isMatchingFace ? 'Biometric Verification' : 'Processing...'}
+                          </p>
+                          <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse">
+                            {isMatchingFace ? faceMatchStatus : 'Finalizing step...'}
+                          </p>
+                        </div>
+                      </div>
                     ) : selfieFile ? (
                       <div className="w-full h-full relative flex flex-col items-center justify-center">
                         <img src={selfieFile} alt="Selfie" className="absolute inset-0 w-full h-full object-cover rounded-[28px] opacity-20" />
@@ -1983,7 +2057,7 @@ export default function CompleteRegistration() {
                             {faceMatchResult === 'fail' ? <XCircle className="w-12 h-12 text-red-500" /> : faceMatchResult === 'pass' ? <BadgeCheck className="w-12 h-12 text-emerald-500" /> : <Camera className="w-10 h-10 text-slate-400" />}
                           </div>
                           <p className={`text-sm font-black ${faceMatchResult === 'fail' ? 'text-red-600' : 'text-[#1a234b]'}`}>
-                            {faceMatchResult === 'pass' ? 'ID Verified — Selfie Matches' : faceMatchResult === 'fail' ? 'Selfie Does Not Match ID' : 'Selfie Captured — Verifying...'}
+                            {faceMatchResult === 'pass' ? 'ID Verified — Selfie Matches' : faceMatchResult === 'fail' ? 'Selfie Does Not Match ID' : (isMatchingFace ? faceMatchStatus : 'Selfie Captured — Verifying...')}
                           </p>
                           <p className="text-[10px] font-bold text-slate-400">Click to retake</p>
                         </div>
@@ -2013,7 +2087,7 @@ export default function CompleteRegistration() {
                   >
                     Start AI Document Verification <ArrowRight className="w-5 h-5" />
                   </button>
-                  <button onClick={() => setKycSubStep(1)} disabled={isVerifying || isMatchingFace} className="mt-6 text-slate-400 text-[10px] font-black hover:text-[#1a234b] transition-colors">Back to ID Upload</button>
+                  <button onClick={() => setKycSubStep(1)} disabled={isVerifying || isMatchingFace} className="mt-6 text-slate-400 text-[10px] font-black hover:text-[#1a234b] transition-colors">Back</button>
                 </div>
               )}
             </div>
@@ -2143,7 +2217,7 @@ export default function CompleteRegistration() {
             </div>
 
             <div className="relative aspect-[3/4] bg-slate-900 overflow-hidden flex items-center justify-center">
-              <video ref={videoRef} autoPlay playsInline className={`w-full h-full object-cover scale-x-[-1] ${frozenFrame ? 'hidden' : ''}`} />
+              <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover scale-x-[-1] ${frozenFrame ? 'hidden' : ''}`} />
               {frozenFrame && (
                 <img src={frozenFrame} alt="Frozen capture" className="w-full h-full object-cover" />
               )}

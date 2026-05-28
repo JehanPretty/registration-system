@@ -175,7 +175,6 @@ const IDCard = ({ user, template, side = "front" }) => {
                             <div className="h-[2px] w-8 rounded-full mb-3" style={{ backgroundColor: secondary }} />
                             <p className="font-black tracking-[3px] uppercase" style={{ fontSize: `${template.role_font_size || 11}px`, color: template.role_color || secondary }}>{displayRole}</p>
 
-                            {/* Decorative divider for a "clean" feel */}
                             <div className="w-full border-t border-slate-50 mt-auto mb-4" />
                         </div>
 
@@ -371,7 +370,7 @@ const IDCard = ({ user, template, side = "front" }) => {
 
                             <div className="items-center mb-auto text-center">
                                 <h3 className={`font-black tracking-tight leading-tight ${!template.name_font_size ? "text-2xl" : ""}`} style={{ fontSize: template.name_font_size ? `${template.name_font_size}px` : undefined, color: template.name_color || getAutoColor(null, "#ffffff", "#1e1b4b") }}>{displayName}</h3>
-                                <div className="bg-white/10 px-4 py-1.5 rounded-full mt-3 border border-white/10 inline-block">
+                                <div className="bg-white/10 px-4 py-1.5 rounded-full mt-3 border border-white/10 inline-block mb-auto">
                                     <p className="font-black tracking-widest uppercase" style={{ fontSize: template.role_font_size ? `${template.role_font_size}px` : "10px", color: template.role_color || getAutoColor(null, "#ffffff", "#1e1b4b") }}>{displayRole}</p>
                                 </div>
                             </div>
@@ -421,7 +420,7 @@ const IDCard = ({ user, template, side = "front" }) => {
                         {/* User info */}
                         <div className="flex-1 flex flex-col h-full pt-28 pb-6 px-6 relative z-10">
                             <h3 className="font-black tracking-tight leading-none mb-1" style={{ fontSize: template.name_font_size ? `${template.name_font_size}px` : "24px", color: template.name_color || "#ffffff" }}>{displayName}</h3>
-                            <div className="bg-white/10 px-3 py-1 rounded-full mt-2 border border-white/10 inline-block self-start">
+                            <div className="bg-white/10 px-3 py-1 rounded-full mt-2 border border-white/10 inline-block self-start mb-auto">
                                 <p className="font-black tracking-widest uppercase" style={{ fontSize: template.role_font_size ? `${template.role_font_size}px` : "10px", color: template.role_color || "rgba(255,255,255,0.85)" }}>{displayRole}</p>
                             </div>
                             <div className="flex items-end justify-between mt-auto">
@@ -1087,7 +1086,7 @@ const IDCard = ({ user, template, side = "front" }) => {
                                     <span className="text-[8px] font-black text-slate-400 tracking-wider">Designation</span>
                                     <span className={`font-bold ${!template.role_font_size ? "text-[10px]" : ""}`} style={{ fontSize: template.role_font_size ? `${template.role_font_size}px` : undefined, color: template.role_color || secondary }}>{displayRole}</span>
                                 </div>
-                                {template.show_id_number && (
+                                 {template.show_id_number && (
                                     <div className="flex justify-between items-baseline border-b border-dotted border-slate-200 pb-1">
                                         <span className="text-[8px] font-black text-slate-400 tracking-wider">ID Number</span>
                                         <span className={`font-black tracking-[2px] ${!template.id_number_font_size ? "text-[10px]" : ""}`} style={{ fontSize: template.id_number_font_size ? `${template.id_number_font_size}px` : undefined, color: template.id_number_color || primary }}>{displayID}</span>
@@ -1146,6 +1145,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                                 <p className={`font-black tracking-[2px] ${!template.id_number_font_size ? "text-[10px]" : ""}`} style={{ fontSize: template.id_number_font_size ? `${template.id_number_font_size}px` : undefined, color: template.id_number_color || primary }}>{displayID}</p>
                                             </div>
                                         )}
+                                    </div>
+                                    <div className="flex gap-4">
                                     </div>
                                 </div>
                                 <div className="flex items-end justify-between mt-auto">
@@ -1282,14 +1283,6 @@ const IDCard = ({ user, template, side = "front" }) => {
                                     <span className="text-[8px] font-black text-slate-500 tracking-wider">ID Number</span>
                                     <span className={`font-black tracking-wider ${!template.id_number_font_size ? "text-[11px]" : ""}`} style={{ fontSize: template.id_number_font_size ? `${template.id_number_font_size}px` : undefined, color: template.id_number_color || "#334155" }}># {displayID}</span>
                                 </div>
-                                <div className="flex items-center justify-between border-b border-slate-50 pb-1.5">
-                                    <span className="text-[8px] font-black text-slate-500 tracking-wider">Date of Birth</span>
-                                    <span className="text-[10px] font-bold text-slate-600">{user.attributes?.dob || "01/01/2000"}</span>
-                                </div>
-                                <div className="flex items-center justify-between border-b border-slate-50 pb-1.5">
-                                    <span className="text-[8px] font-black text-slate-500 tracking-wider">Phone Number</span>
-                                    <span className="text-[10px] font-bold text-slate-600">{user.attributes?.phone || "+63 900 000 0000"}</span>
-                                </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-[8px] font-black text-slate-500 tracking-wider">Official Email</span>
                                     <span className="text-[10px] font-bold text-slate-600 truncate max-w-[140px]">{user.email || "user@institution.com"}</span>
@@ -1355,14 +1348,6 @@ const IDCard = ({ user, template, side = "front" }) => {
                                 </div>
 
                                 <div className="space-y-3 mt-auto mb-6 max-w-[200px]">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: secondary }} />
-                                        <span className="text-[9px] font-bold text-slate-600 tracking-wider">{user.attributes?.dob || "01/01/2000"}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: secondary }} />
-                                        <span className="text-[9px] font-bold text-slate-600 tracking-wider">{user.attributes?.phone || "+63 900 000 0000"}</span>
-                                    </div>
                                     <div className="flex items-center gap-3">
                                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: secondary }} />
                                         <span className="text-[9px] font-bold text-slate-600 tracking-wider truncate">{user.email || "user@email.com"}</span>

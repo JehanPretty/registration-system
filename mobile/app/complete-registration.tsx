@@ -17,6 +17,8 @@ import {
   FlatList,
   ActivityIndicator,
   Dimensions,
+  Keyboard,
+  Pressable
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, usePathname } from "expo-router";
@@ -97,8 +99,9 @@ const ProgressTracker = ({ steps, activeIndex }: { steps: any[], activeIndex: nu
       <View className="flex-row items-center justify-between relative">
         {/* Background Track - Phase 1 */}
         <View 
-          className="absolute top-[15px] left-[20px] right-[20px] flex-row items-center z-0"
-          style={{ top: circleSize / 2 - 2 }}
+          className="absolute left-[20px] right-[20px] flex-row items-center z-0"
+          style={{ top: circleSize / 2 - 1 }}
+          pointerEvents="none"
         >
           <View className="h-[2px] bg-slate-100 rounded-full overflow-hidden flex-1" style={{ marginRight: gapSize + 10 }}>
             <View
@@ -480,6 +483,9 @@ export default function CompleteRegistration() {
   };
 
   const handleNextStep = () => {
+    Keyboard.dismiss();
+    // DIAGNOSTIC ALERT: Confirm the function is even called
+    // Alert.alert("Debug", "Next Step Triggered");
     const step = steps[activeStepIndex];
     if (!step) return;
 
@@ -491,30 +497,40 @@ export default function CompleteRegistration() {
         return;
       }
 
-      const secTitle = (section.title || "").toLowerCase().replace(/\s/g, '');
-      const isAddressSection = secTitle.includes("address");
+      const lowTitle = (section.title || "").toLowerCase();
       
-      if (isAddressSection) {
-        const requiredAddressFields = ["Country", "Province", "City / Municipality", "Zip Code", "Street Name"];
+      if (lowTitle.includes("address")) {
+        const requiredAddressFields = [
+          "Country",
+          "Province", 
+          "City / Municipality", 
+          "Barangay", 
+          "Street Name", 
+          "Zip Code"
+        ];
+
         requiredAddressFields.forEach(f => {
-          const val = dynamicValues[f] 
-            || dynamicValues[f.toLowerCase()] 
+          // Look up by original label, lowercase, and common variations
+          const val = dynamicValues[f]
+            || dynamicValues[f.toLowerCase()]
+            || (f === "Province" ? (dynamicValues["Province"] || dynamicValues["Region"] || dynamicValues["province"] || dynamicValues["region"]) : null)
+            || (f === "City / Municipality" ? (dynamicValues["City"] || dynamicValues["city"] || dynamicValues["City / Municipality"]) : null)
+            || (f === "Street Name" ? (dynamicValues["Street"] || dynamicValues["street"] || dynamicValues["Street Name"]) : null)
+            || (f === "Country" ? (dynamicValues["Country"] || dynamicValues["country"]) : null)
             || dynamicValues[f.replace(/\s/g, '').toLowerCase()]
-            || dynamicValues[f.replace(/\//g, ' ').replace(/\s+/g, ' ').trim()]
-            || dynamicValues["Province"] || dynamicValues["Region"] || dynamicValues["State"] || dynamicValues["State / Province"]
-            || dynamicValues["City"] || dynamicValues["Municipality"] || dynamicValues["City / Municipality"]
-            || dynamicValues["ZipCode"] || dynamicValues["Zip code"];
-          
-          if (!val || val === "" || (typeof val === 'string' && val.trim() === "")) {
-            newErrors[f] = f;
+            || dynamicValues[f.replace(/\//g, ' ').replace(/\s+/g, ' ').trim()];
+
+          if (!val || (typeof val === 'string' && val.trim() === '')) {
+            newErrors[f] = `${f} is required`;
           }
         });
       } else {
         section.fields?.forEach((f: any) => {
           if (f.required) {
             const isHidden = (fieldIsMiddleName(f.label) && noMiddleName) || (fieldIsSuffix(f.label) && noSuffix);
-            const val = dynamicValues[f.id] || dynamicValues[f.label];
-            if (!isHidden && (!val || val === "")) {
+            // Check both ID and Label, but prioritize Label as that's what renderDynamicInput uses
+            const val = dynamicValues[f.label] || dynamicValues[f.id];
+            if (!isHidden && (!val || (typeof val === 'string' && val.trim() === ""))) {
               newErrors[f.id] = `${f.label} is required`;
             }
           }
@@ -523,19 +539,24 @@ export default function CompleteRegistration() {
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
-        const missing = Object.keys(newErrors).join(", ");
-        Alert.alert("Required Fields", `Please complete the following fields: ${missing}`);
+        // Scroll to top so user sees the red error indicators on the fields
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 50);
         return;
       }
     } else if (step.type === 'summary') {
       // Summary review confirmed
     } else if (step.type === 'security') {
-      if (!emailConfirm || !password) {
-        Alert.alert("Required", "Please type your email and password to verify your identity.");
-        return;
+      const newErrors: Record<string, string> = {};
+      if (!emailConfirm) {
+        newErrors.email = "Email address is required";
+      } else if (emailConfirm.trim().toLowerCase() !== user?.email?.toLowerCase()) {
+        newErrors.email = "Email does not match your account";
       }
-      if (emailConfirm.trim().toLowerCase() !== user?.email?.toLowerCase()) {
-        Alert.alert("Email Mismatch", "The email entered does not match your account email.");
+      if (!password) {
+        newErrors.password = "Password is required";
+      }
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
         return;
       }
     }
@@ -659,10 +680,21 @@ export default function CompleteRegistration() {
       );
     }
 
+    const errorKey = errors[field.id] ? field.id : (errors[field.label] ? field.label : null);
+    const fieldError = errorKey ? errors[errorKey] : null;
+
     return (
       <View className="mb-4">
         <InputLabel title={field.label} required={!isNA && field.required} />
-        {inputElement}
+        {/* Apply red border style wrapper when there's an error */}
+        <View style={fieldError ? { borderRadius: 12, borderWidth: 1.5, borderColor: '#ef4444' } : {}}>
+          {inputElement}
+        </View>
+        {fieldError && (
+          <Text style={{ fontSize: 10, fontWeight: '700', color: '#ef4444', marginTop: 4, marginLeft: 4 }}>
+            ⚠ {fieldError}
+          </Text>
+        )}
         {isMiddleName && (
           <TouchableOpacity
             onPress={() => {
@@ -806,11 +838,12 @@ export default function CompleteRegistration() {
 
         if (!result.match) {
           setLivenessPhase("idle");
-          Alert.alert("Biometric Verification Failed", result.reason || "Face does not match the provided ID, or no real human detected.");
+          setFacePositionHint(result.reason || "Face mismatch");
+          setLivenessInstruction(result.reason || "Face does not match ID");
         } else if (scanMatchResult === 'fail') {
           // If the OCR document data failed previously, we still fail here
           setLivenessPhase("idle");
-          Alert.alert("Identity Mismatch", "Document data verification failed.");
+          setLivenessInstruction("Identity Mismatch");
         } else {
           setLivenessPhase("success");
           setLivenessInstruction("Identity Secured!");
@@ -828,7 +861,7 @@ export default function CompleteRegistration() {
         }
       } catch (err) {
         console.error("Capture error:", err);
-        Alert.alert("Error", "Could not complete biometric verification.");
+        setLivenessInstruction("Verification Error");
         setLivenessPhase("idle");
       }
     }
@@ -1024,13 +1057,12 @@ export default function CompleteRegistration() {
             updateProfile({ ...updatedUser, isProfileComplete: true });
             setIsSuccess(true);
           } else {
-            setKycPipelineError("Verification Failed");
-            Alert.alert("Submission Failed", "Could not update profile. Please try again.");
+            const errData = await res.json().catch(() => ({}));
+            setKycPipelineError(errData.detail || "Submission Failed");
           }
         } catch (err) {
           setKycPipelineError("Connection Error");
           console.error("Update error:", err);
-          Alert.alert("Connection Error", "Please ensure your backend is reachable.");
         } finally {
           setIsVerifying(false);
         }
@@ -1065,12 +1097,13 @@ export default function CompleteRegistration() {
 
       <ProgressTracker steps={steps} activeIndex={activeStepIndex} />
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} className="flex-1">
         <ScrollView 
           ref={scrollRef}
-          showsVerticalScrollIndicator={false} 
-          contentContainerStyle={{ paddingBottom: 40 }} 
-          className="px-4 mt-2"
+          className="flex-1 px-6 pt-6"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          keyboardShouldPersistTaps="handled"
         >
 
           {isSuccess ? (
@@ -1111,17 +1144,16 @@ export default function CompleteRegistration() {
                     )}
                   </View>
 
-                  <TouchableOpacity
-                    onPress={() => {
-                      console.log("Next button pressed");
-                      handleNextStep();
-                    }}
-                    activeOpacity={0.7}
+                  <Pressable
+                    onPress={handleNextStep}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.5 : 1,
+                    })}
                     className="bg-[#1a234b] py-5 rounded-[24px] items-center mb-10 flex-row justify-center shadow-xl shadow-blue-900/20"
                   >
                     <Text className="text-white font-black text-sm tracking-widest mr-2 ">Next</Text>
                     <Ionicons name="arrow-forward" size={18} color="white" />
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
 
@@ -1129,7 +1161,10 @@ export default function CompleteRegistration() {
                 <View className="mt-2">
                   <View className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 mb-6">
                     <SectionHeader title="Review Your Information" />
-                    <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
+                    {/* ✅ Use View instead of ScrollView — nested ScrollViews on Android
+                        absorb touch events and make the button below unresponsive.
+                        The outer ScrollView already handles scrolling. */}
+                    <View>
                       {formSections.map((section, sidx) => (
                         <View key={sidx} className="mb-6">
                           <Text className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3">{section.title}</Text>
@@ -1146,16 +1181,19 @@ export default function CompleteRegistration() {
                           </View>
                         </View>
                       ))}
-                    </ScrollView>
+                    </View>
                   </View>
 
-                  <TouchableOpacity
+                  <Pressable
                     onPress={handleNextStep}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.5 : 1,
+                    })}
                     className="bg-[#1a234b] py-5 rounded-[24px] items-center mb-10 flex-row justify-center shadow-xl shadow-blue-900/20"
                   >
                     <Text className="text-white font-black text-sm tracking-widest mr-2 ">Confirm & Continue</Text>
                     <Ionicons name="arrow-forward" size={18} color="white" />
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
 
@@ -1172,54 +1210,61 @@ export default function CompleteRegistration() {
                   <View className="space-y-6">
                     <View>
                       <InputLabel title="Email Address" required />
-                      <View className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 flex-row items-center">
-                        <Ionicons name="mail-outline" size={20} color="#94a3b8" style={{ marginRight: 12 }} />
+                      <View style={errors.email ? { borderRadius: 16, borderWidth: 1.5, borderColor: '#ef4444' } : {}}
+                        className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 flex-row items-center">
+                        <Ionicons name="mail-outline" size={20} color={errors.email ? '#ef4444' : '#94a3b8'} style={{ marginRight: 12 }} />
                         <TextInput
                           placeholder="Confirm your email"
                           placeholderTextColor="#cbd5e1"
                           autoCapitalize="none"
                           keyboardType="email-address"
                           value={emailConfirm}
-                          onChangeText={setEmailConfirm}
+                          onChangeText={(v) => { setEmailConfirm(v); if (errors.email) setErrors(prev => ({ ...prev, email: '' })); }}
                           className="flex-1 text-sm font-bold text-[#1a234b]"
                         />
                       </View>
+                      {errors.email ? <Text style={{ fontSize: 10, fontWeight: '700', color: '#ef4444', marginTop: 4, marginLeft: 4 }}>⚠ {errors.email}</Text> : null}
                     </View>
 
                     <View className="mt-4">
                       <InputLabel title="Account Password" required />
-                      <View className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 flex-row items-center">
-                        <Ionicons name="key-outline" size={20} color="#94a3b8" style={{ marginRight: 12 }} />
+                      <View style={errors.password ? { borderRadius: 16, borderWidth: 1.5, borderColor: '#ef4444' } : {}}
+                        className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-4 flex-row items-center">
+                        <Ionicons name="key-outline" size={20} color={errors.password ? '#ef4444' : '#94a3b8'} style={{ marginRight: 12 }} />
                         <TextInput
                           placeholder="Type your password"
                           placeholderTextColor="#cbd5e1"
                           secureTextEntry={!showPassword}
                           value={password}
-                          onChangeText={setPassword}
+                          onChangeText={(v) => { setPassword(v); if (errors.password) setErrors(prev => ({ ...prev, password: '' })); }}
                           className="flex-1 text-sm font-bold text-[#1a234b]"
                         />
                         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                           <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#94a3b8" />
                         </TouchableOpacity>
                       </View>
+                      {errors.password ? <Text style={{ fontSize: 10, fontWeight: '700', color: '#ef4444', marginTop: 4, marginLeft: 4 }}>⚠ {errors.password}</Text> : null}
                     </View>
                   </View>
 
                   <View className="mt-14 flex-col gap-3">
-                    <TouchableOpacity
-                      onPress={handleSaveProfile}
-                      disabled={isVerifying}
-                      className="w-full py-5 bg-[#1a234b] rounded-[24px] items-center flex-row justify-center shadow-xl shadow-blue-900/20"
-                    >
-                      {isVerifying ? (
-                        <ActivityIndicator size="small" color="white" />
-                      ) : (
-                        <>
-                          <Text className="text-white font-black text-sm tracking-widest mr-2 ">Finish Registration</Text>
-                          <Ionicons name="checkmark-done" size={18} color="white" />
-                        </>
-                      )}
-                    </TouchableOpacity>
+                  <Pressable
+                    onPress={handleSaveProfile}
+                    disabled={isVerifying}
+                    style={({ pressed }) => ({
+                      opacity: (pressed && !isVerifying) ? 0.5 : 1,
+                    })}
+                    className="w-full py-5 bg-[#1a234b] rounded-[24px] items-center flex-row justify-center shadow-xl shadow-blue-900/20"
+                  >
+                    {isVerifying ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Text className="text-white font-black text-sm tracking-widest mr-2 ">Finish Registration</Text>
+                        <Ionicons name="checkmark-done" size={18} color="white" />
+                      </>
+                    )}
+                  </Pressable>
                   </View>
                 </View>
               )}
@@ -1289,16 +1334,19 @@ export default function CompleteRegistration() {
                     )}
                   </View>
 
-                  <TouchableOpacity
+                  <Pressable
                     onPress={kycSubStep === 1 ? () => setKycSubStep(2) : handleNextStep}
                     disabled={kycSubStep === 1 ? !kycFile : !selfieFile}
+                    style={({ pressed }) => ({
+                      opacity: pressed ? 0.5 : 1,
+                    })}
                     className={`py-5 rounded-[24px] items-center mb-10 flex-row justify-center shadow-xl ${kycSubStep === 1 ? (!kycFile ? 'bg-slate-200' : 'bg-[#1a234b]') : (!selfieFile ? 'bg-slate-200' : 'bg-[#1a234b]')}`}
                   >
                     <Text className="text-white font-black text-sm tracking-widest mr-2 ">
                       {kycSubStep === 1 ? 'Next' : 'Continue'}
                     </Text>
                     <Ionicons name="arrow-forward" size={18} color="white" />
-                  </TouchableOpacity>
+                  </Pressable>
                 </View>
               )}
             </>
