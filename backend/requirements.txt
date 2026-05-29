@@ -12,3 +12,4 @@ opencv-python-headless
 numpy
 google-auth
 requests
+httpx
