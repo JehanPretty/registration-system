@@ -19,7 +19,7 @@ app = FastAPI(title="Registration System API")
 # Add CORS Middleware (Supports local network IPs and dynamic dev ports)
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|100\.\d+\.\d+\.\d+|.*\.ts\.net|.*\.ngrok-free\.app|.*\.loca\.lt|.*\.trycloudflare\.com)(:[0-9]*)?",
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|100\.\d+\.\d+\.\d+|.*\.ts\.net|.*\.ngrok-free\.app|.*\.loca\.lt|.*\.trycloudflare\.com|.*\.vercel\.app)(:[0-9]*)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,7 +1,11 @@
 const getApiBaseUrl = () => {
+  // In production (Vercel), VITE_API_URL is set via Vercel Environment Variables.
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // Local dev fallback: same hostname, port 8000
   const { hostname, protocol } = window.location;
-  
-  // Use the same protocol as the frontend to avoid security blocks (Mixed Content)
   return `${protocol}//${hostname}:8000`;
 };
 
