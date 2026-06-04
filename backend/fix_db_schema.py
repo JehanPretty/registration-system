@@ -9,11 +9,16 @@ def fix_schema():
         
         # Add custom_front_bg_url if it doesn't exist
         try:
+            conn.execute(text("ALTER TABLE id_templates ADD COLUMN IF NOT EXISTS show_issue_date BOOLEAN DEFAULT TRUE"))
+            conn.execute(text("ALTER TABLE id_templates ADD COLUMN IF NOT EXISTS issue_date_label VARCHAR DEFAULT 'Issue Date'"))
+            conn.execute(text("ALTER TABLE id_templates ADD COLUMN IF NOT EXISTS show_expiry_date BOOLEAN DEFAULT TRUE"))
+            conn.execute(text("ALTER TABLE id_templates ADD COLUMN IF NOT EXISTS expiry_date_label VARCHAR DEFAULT 'Valid Until'"))
+            conn.execute(text("ALTER TABLE id_templates ADD COLUMN IF NOT EXISTS expiry_date_value VARCHAR DEFAULT ''"))
             conn.execute(text("ALTER TABLE id_templates ADD COLUMN IF NOT EXISTS custom_front_bg_url VARCHAR"))
             conn.commit()
-            print("Added custom_front_bg_url column.")
+            print("Added new columns including custom_front_bg_url, issue_date_label, expiry_date_label, etc.")
         except Exception as e:
-            print(f"Column custom_front_bg_url might already exist: {e}")
+            print(f"Columns might already exist: {e}")
 
         # Change font size columns to FLOAT
         try:

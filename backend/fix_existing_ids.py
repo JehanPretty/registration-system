@@ -15,8 +15,8 @@ def fix_ids():
         for user in users:
             current_id = user.external_id
             
-            # If ID is missing, or doesn't match the new structured format
-            if not current_id or not re.match(ID_PATTERN, current_id):
+            # If ID is missing, doesn't match the new structured format, or is a generic 'USER' prefix
+            if not current_id or not re.match(ID_PATTERN, current_id) or current_id.startswith("USER-"):
                 # Only generate if the user is verified or has a role
                 if user.status == 'verified' or user.role_context:
                     role_name = user.role_context or "User"

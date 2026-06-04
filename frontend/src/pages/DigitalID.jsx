@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import Cropper from "react-cropper";
+import "cropperjs/dist/cropper.css";
 import { Button, Steps, Upload, Result, Modal, Spin, Input, Form, Typography, Space, Row, Col, Card, message } from "antd";
 import { UploadOutlined, CameraOutlined, CheckCircleOutlined, SyncOutlined, IdcardOutlined, QrcodeOutlined, DownloadOutlined, PrinterOutlined } from "@ant-design/icons";
 import { Eye, X, ShieldCheck, ChevronRight, CheckCircle2, BadgeCheck, XCircle, Scan, Calendar, Ticket, MapPin, Sparkles, PenLine, AlertTriangle, Loader2, Truck, Plus, CreditCard } from "lucide-react";
@@ -8,7 +10,8 @@ import IDCard from "../components/IDCard";
 import MapAddressPicker from "../components/MapAddressPicker";
 import { API_BASE_URL } from "../config";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas-pro";
+import { toJpeg, toPng } from 'html-to-image';
+import { formatExternalId } from "../utils/idFormatter";
 
 import Step1Img from "../assets/images/Step1.png";
 import Step2Img from "../assets/images/Step2.png";
@@ -97,6 +100,9 @@ const DigitalID = ({ userData, setUserData }) => {
     const [photoError, setPhotoError] = useState(false);
     const [signatureError, setSignatureError] = useState(false);
     const [removingSigBg, setRemovingSigBg] = useState(false);
+    const [sigCropModalOpen, setSigCropModalOpen] = useState(false);
+    const [sigCropImageSrc, setSigCropImageSrc] = useState(null);
+    const sigCropperRef = useRef(null);
     const [template, setTemplate] = useState(userData?.id_template || {});
     const [isTemplateLoaded, setIsTemplateLoaded] = useState(!!userData?.id_template);
     const [application, setApplication] = useState(null);
@@ -384,15 +390,28 @@ const DigitalID = ({ userData, setUserData }) => {
         const dob = getVal(['dob', 'Date of Birth', 'Birth Date', 'Birthdate', 'Birthday', 'date_of_birth']);
         const phone = getVal(['phone', 'Phone Number', 'Mobile Number', 'Contact Number', 'Mobile No.', 'phone_number', 'mobile']);
 
+        // Construct full name from components
+        const firstName = getVal(['First Name', 'firstname', 'first_name']);
+        const middleName = getVal(['Middle Name', 'middlename', 'middle_name']);
+        const lastName = getVal(['Last Name', 'lastname', 'last_name']);
+        
+        const constructedName = [firstName, middleName, lastName]
+            .filter(n => n && typeof n === 'string')
+            .map(n => n.trim())
+            .join(' ');
+
         return {
             ...userData,
+            name: constructedName || userData.name,
             attributes: {
                 ...attrs,
                 dob: dob || attrs.dob,
-                phone: phone || attrs.phone
+                phone: phone || attrs.phone,
+                id_picture: idPhoto || attrs.id_picture,
+                signature: signature || attrs.signature
             }
         };
-    }, [userData, application]);
+    }, [userData, application, idPhoto, signature]);
 
     // Auto-populate delivery form when merged user data (including form data) becomes available
     useEffect(() => {
@@ -739,6 +758,49 @@ const DigitalID = ({ userData, setUserData }) => {
             img.src = dataUrl;
         });
 
+    const handleSignatureCropConfirm = async () => {
+        if (!sigCropperRef.current?.cropper) return;
+        setSigCropModalOpen(false);
+        setRemovingSigBg(true);
+
+        try {
+            const canvas = sigCropperRef.current.cropper.getCroppedCanvas();
+            if (!canvas) { setRemovingSigBg(false); return; }
+
+            // 1. Instant local background removal for immediate feedback
+            const dataUrl = canvas.toDataURL("image/png");
+            const transparentData = await removeBackground(dataUrl);
+            setSignature(transparentData);
+            setRemovingSigBg(false);
+            message.success("Signature cropped and background removed.");
+
+            // 2. Concurrently verify on backend for permanent storage
+            canvas.toBlob(async (blob) => {
+                if (!blob) return;
+                const formData = new FormData();
+                formData.append("file", blob, "signature.png");
+
+                try {
+                    const res = await fetch(`${API_BASE_URL}/detect-face/detect-signature`, {
+                        method: "POST",
+                        body: formData,
+                    });
+                    const result = await res.json();
+                    if (result.is_signature && result.processed_url) {
+                        setSignature(`${API_BASE_URL}${result.processed_url}`);
+                    } else {
+                        message.warning(result.reason || "Server could not verify signature — keeping local version.");
+                    }
+                } catch (err) {
+                    console.error("Backend signature verify failed:", err);
+                }
+            }, "image/png");
+        } catch (err) {
+            console.error("Signature crop error:", err);
+            setRemovingSigBg(false);
+        }
+    };
+
     const handleFaceMatch = async (capturedCanvas) => {
         if (!idPhoto) return;
 
@@ -898,21 +960,25 @@ const DigitalID = ({ userData, setUserData }) => {
             const pdfWidthMm = isPortrait ? 53.975 : 85.725;
             const pdfHeightMm = isPortrait ? 85.725 : 53.975;
 
-            // Render front element to canvas using html2canvas with CORS support
-            const frontCanvas = await html2canvas(frontEl, {
-                useCORS: true,
-                scale: 2,
-                backgroundColor: '#ffffff'
+            // Render front element to canvas using html-to-image
+            const frontDataUrl = await toPng(frontEl, {
+                pixelRatio: 4,
+                cacheBust: true,
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                }
             });
-            const frontDataUrl = frontCanvas.toDataURL("image/jpeg", 1.0);
 
             // Render back element to canvas
-            const backCanvas = await html2canvas(backEl, {
-                useCORS: true,
-                scale: 2,
-                backgroundColor: '#ffffff'
+            const backDataUrl = await toPng(backEl, {
+                pixelRatio: 4,
+                cacheBust: true,
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                }
             });
-            const backDataUrl = backCanvas.toDataURL("image/jpeg", 1.0);
 
             const pdf = new jsPDF({
                 orientation: 'portrait',
@@ -941,18 +1007,19 @@ const DigitalID = ({ userData, setUserData }) => {
                 const totalWidth = (pdfWidthMm * 2) + gap;
                 const startX = (210 - totalWidth) / 2;
 
-                pdf.addImage(frontDataUrl, 'JPEG', startX, startY, pdfWidthMm, pdfHeightMm);
-                pdf.addImage(backDataUrl, 'JPEG', startX + pdfWidthMm + gap, startY, pdfWidthMm, pdfHeightMm);
+                pdf.addImage(frontDataUrl, 'PNG', startX, startY, pdfWidthMm, pdfHeightMm);
+                pdf.addImage(backDataUrl, 'PNG', startX + pdfWidthMm + gap, startY, pdfWidthMm, pdfHeightMm);
             } else {
                 // Stacked vertically for landscape to fit comfortably
                 const startX = (210 - pdfWidthMm) / 2;
                 const gap = 20;
 
-                pdf.addImage(frontDataUrl, 'JPEG', startX, startY, pdfWidthMm, pdfHeightMm);
-                pdf.addImage(backDataUrl, 'JPEG', startX, startY + pdfHeightMm + gap, pdfWidthMm, pdfHeightMm);
+                pdf.addImage(frontDataUrl, 'PNG', startX, startY, pdfWidthMm, pdfHeightMm);
+                pdf.addImage(backDataUrl, 'PNG', startX, startY + pdfHeightMm + gap, pdfWidthMm, pdfHeightMm);
             }
 
-            const filename = `Digital_ID_${userData?.external_id || 'Card'}.pdf`;
+            const formattedId = formatExternalId(userData?.external_id, userData?.role_context || userData?.role);
+            const filename = `Digital_ID_${formattedId || 'Card'}.pdf`;
             pdf.save(filename);
 
             message.success({ content: "PDF Downloaded successfully!", key: "pdf-gen" });
@@ -968,13 +1035,12 @@ const DigitalID = ({ userData, setUserData }) => {
         if (!stubRef.current) return;
         message.loading({ content: "Generating Image...", key: "stub-save" });
         try {
-            const canvas = await html2canvas(stubRef.current, {
-                useCORS: true,
-                scale: 3,
+            const dataUrl = await toPng(stubRef.current, {
+                pixelRatio: 4,
+                cacheBust: true,
                 backgroundColor: '#ffffff',
-                logging: false,
+                style: { transform: 'scale(1)', transformOrigin: 'top left' }
             });
-            const dataUrl = canvas.toDataURL("image/png");
             const link = document.createElement('a');
             const stubId = trackingId || `CLAIM-${(String(userData?.id || "").slice(0, 8)).toUpperCase()}`;
             link.download = `Claim_Stub_${stubId}.png`;
@@ -991,13 +1057,13 @@ const DigitalID = ({ userData, setUserData }) => {
         if (!stubRef.current) return;
         message.loading({ content: "Generating PDF...", key: "stub-save" });
         try {
-            const canvas = await html2canvas(stubRef.current, {
-                useCORS: true,
-                scale: 3,
+            const imgData = await toJpeg(stubRef.current, {
+                quality: 1.0,
+                pixelRatio: 4,
+                cacheBust: true,
                 backgroundColor: '#ffffff',
-                logging: false,
+                style: { transform: 'scale(1)', transformOrigin: 'top left' }
             });
-            const imgData = canvas.toDataURL("image/jpeg", 1.0);
             
             const pdf = new jsPDF({
                 orientation: 'portrait',
@@ -1141,7 +1207,7 @@ const DigitalID = ({ userData, setUserData }) => {
                                                     <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
                                                     ID Number
                                                 </span>
-                                                <span className="text-base font-black text-[#1a234b] tracking-wider">{userData?.external_id || "PENDING"}</span>
+                                                <span className="text-base font-black text-[#1a234b] tracking-wider">{formatExternalId(userData?.external_id, userData?.role_context || userData?.role)}</span>
                                             </div>
                                         </Col>
                                         {isStudent && (
@@ -1275,50 +1341,13 @@ const DigitalID = ({ userData, setUserData }) => {
                                             accept="image/*"
                                             maxCount={1}
                                             beforeUpload={(file) => {
-                                                setRemovingSigBg(true);
                                                 setSignatureError(false);
-
-                                                // 1. Instant local background removal for immediate UI feedback
                                                 const reader = new FileReader();
-                                                reader.onload = async (e) => {
-                                                    try {
-                                                        const rawData = e.target.result;
-                                                        const transparentData = await removeBackground(rawData);
-                                                        setSignature(transparentData);
-                                                        setRemovingSigBg(false); // Hide spinner instantly
-                                                        message.success("Signature background removed instantly.");
-
-                                                        // 2. Concurrently verify and process on backend for permanent storage
-                                                        const formData = new FormData();
-                                                        formData.append('file', file);
-
-                                                        fetch(`${API_BASE_URL}/detect-face/detect-signature`, {
-                                                            method: 'POST',
-                                                            body: formData,
-                                                        })
-                                                            .then(res => res.json())
-                                                            .then(result => {
-                                                                if (result.is_signature && result.processed_url) {
-                                                                    // Update with the permanent static URL once ready
-                                                                    setSignature(`${API_BASE_URL}${result.processed_url}`);
-                                                                } else {
-                                                                    message.error(result.reason || "Invalid signature detected by server.");
-                                                                    setSignature(null);
-                                                                }
-                                                            })
-                                                            .catch(err => {
-                                                                console.error("Backend signature process failed:", err);
-                                                                // Keep the local transparent signature if backend fails
-                                                            });
-
-                                                    } catch (err) {
-                                                        console.error("Local signature processing failed:", err);
-                                                        message.error("Failed to process signature locally.");
-                                                        setRemovingSigBg(false);
-                                                    }
+                                                reader.onload = (e) => {
+                                                    setSigCropImageSrc(e.target.result);
+                                                    setSigCropModalOpen(true);
                                                 };
                                                 reader.readAsDataURL(file);
-
                                                 return false;
                                             }}
                                             showUploadList={false}
@@ -1736,6 +1765,45 @@ const DigitalID = ({ userData, setUserData }) => {
     return (
         <div className="flex-1 flex flex-col min-h-screen bg-slate-50/30">
             {renderPageContent()}
+
+            {/* Signature Crop Modal */}
+            {sigCropModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-white/20">
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <div>
+                                <h3 className="font-bold text-[#1a234b]">Adjust Signature</h3>
+                                <p className="text-[10px] text-slate-400 font-medium mt-0.5">Drag to reposition · Scroll to zoom</p>
+                            </div>
+                            <button onClick={() => setSigCropModalOpen(false)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-4 bg-black/5 relative w-full h-[300px]">
+                            <Cropper
+                                src={sigCropImageSrc}
+                                style={{ height: "100%", width: "100%" }}
+                                initialAspectRatio={NaN}
+                                guides={true}
+                                ref={sigCropperRef}
+                                viewMode={1}
+                                dragMode="move"
+                                background={false}
+                                responsive={true}
+                            />
+                        </div>
+                        <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+                            <p className="text-[10px] text-slate-500 font-medium">Crop tightly around your signature for best results.</p>
+                            <div className="flex gap-2">
+                                <button onClick={() => setSigCropModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors">Cancel</button>
+                                <button onClick={handleSignatureCropConfirm} className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center gap-2">
+                                    <CheckCircle2 className="w-3.5 h-3.5" /> Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ID Photo Guidelines Modal */}
             <Modal
@@ -2453,7 +2521,7 @@ const DigitalID = ({ userData, setUserData }) => {
 
                          <div className="max-sm:scale-[0.7] max-sm:origin-center scale-[1.15] origin-center shadow-[0_0_120px_rgba(255,255,255,0.15)] rounded-[2.5rem]">
                             <IDCard
-                                user={userData}
+                                user={mergedUserData}
                                 template={template}
                                 side={viewSide}
                             />
@@ -2478,10 +2546,10 @@ const DigitalID = ({ userData, setUserData }) => {
             */}
             <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} className="print-mode no-dark">
                 <div id="pdf-front-capture" className="bg-white" style={{ width: template?.orientation === 'landscape' ? 500 : 320, height: template?.orientation === 'landscape' ? 320 : 500 }}>
-                    {userData && template ? <IDCard user={userData} template={template} side="front" /> : null}
+                    {mergedUserData && template ? <IDCard user={mergedUserData} template={template} side="front" /> : null}
                 </div>
                 <div id="pdf-back-capture" className="bg-white" style={{ width: template?.orientation === 'landscape' ? 500 : 320, height: template?.orientation === 'landscape' ? 320 : 500 }}>
-                    {userData && template ? <IDCard user={userData} template={template} side="back" /> : null}
+                    {mergedUserData && template ? <IDCard user={mergedUserData} template={template} side="back" /> : null}
                 </div>
             </div>
         </div>

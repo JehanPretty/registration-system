@@ -11,7 +11,10 @@ def generate_checksum(base_str: str) -> str:
     return chars[total % len(chars)]
 
 def get_role_prefix(role_name: str) -> str:
-    """Map role names to 4-letter prefixes."""
+    """Map role names to 4-letter prefixes dynamically."""
+    if not role_name:
+        return "USER"
+        
     mapping = {
         "Student": "STUD",
         "Teacher": "TEAC",
@@ -21,7 +24,20 @@ def get_role_prefix(role_name: str) -> str:
         "Registrar Staff": "REGS",
         "Staff": "STAF"
     }
-    return mapping.get(role_name, "USER")
+    
+    # Return from explicit mapping if exists
+    if role_name in mapping:
+        return mapping[role_name]
+        
+    # Dynamically generate 4-letter prefix for custom roles
+    # Remove spaces and non-alpha, upper case, take first 4 chars
+    clean_role = ''.join(c for c in role_name if c.isalpha()).upper()
+    if len(clean_role) >= 4:
+        return clean_role[:4]
+    elif len(clean_role) > 0:
+        return clean_role.ljust(4, 'X')
+    
+    return "USER"
 
 def generate_structured_id(db: Session, role_name: str) -> str:
     """

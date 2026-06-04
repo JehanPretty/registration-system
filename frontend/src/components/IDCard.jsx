@@ -2,6 +2,7 @@ import React from 'react';
 import { ShieldCheck, BadgeCheck, Award, Building2, GraduationCap } from 'lucide-react';
 import { QRCode } from "react-qr-code";
 import { API_BASE_URL } from '../config';
+import { formatExternalId } from '../utils/idFormatter';
 
 const IDCard = ({ user, template, side = "front" }) => {
     if (!user || !template) return null;
@@ -13,7 +14,7 @@ const IDCard = ({ user, template, side = "front" }) => {
 
     const displayName = user.name || "Alex Johnson";
     const displayRole = user.role_context || "Representative";
-    const displayID = user.external_id || "STUD-2026-0001";
+    const displayID = formatExternalId(user.external_id, displayRole);
     const resolveImageUrl = (url) => {
         if (!url) return url;
         if (typeof url === 'string') {
@@ -130,13 +131,84 @@ const IDCard = ({ user, template, side = "front" }) => {
     // lightVariant: default value when bg is dark (e.g. "rgba(255,255,255,0.6)")
     // darkVariant: default value when bg is light (e.g. "#64748b99")
     const getAutoColor = (customColor, lightVariant, darkVariant) => {
-        // Determine if the background is likely dark (Modern/Bold styles or having a background image)
         const isDarkBg = !!template.custom_front_bg_url || style === "modern" || style === "bold";
-
         if (customColor && customColor !== "" && customColor !== "#ffffff" && customColor !== "white") {
             return customColor;
         }
         return isDarkBg ? lightVariant : darkVariant;
+    };
+
+    const formatDate = (d) => {
+        if (!d) return "";
+        try {
+            return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch(e) { return d; }
+    };
+
+    const issueDateStr = formatDate(user.created_at || new Date());
+    const expiryDateStr = (() => {
+        if (template.expiry_date_value) {
+            let val = template.expiry_date_value.trim();
+            if (val.toLowerCase().startsWith('+')) {
+                const parts = val.toLowerCase().split(' ');
+                const num = parseInt(parts[0].replace('+', ''), 10);
+                const unit = parts[1] || '';
+                let exp = new Date(user.created_at || new Date());
+                if (unit.includes('year')) exp.setFullYear(exp.getFullYear() + num);
+                else if (unit.includes('month')) exp.setMonth(exp.getMonth() + num);
+                return formatDate(exp);
+            }
+            return val;
+        }
+        let autoExp = new Date(user.created_at || new Date());
+        autoExp.setFullYear(autoExp.getFullYear() + 4);
+        return formatDate(autoExp);
+    })();
+
+    const CardDatesUI = ({ isDarkBg = false, className = "" }) => {
+        if (!template.show_issue_date && !template.show_expiry_date) return null;
+        const mainColor = isDarkBg ? "#ffffff" : "#1e293b";
+        const subColor = isDarkBg ? "rgba(255,255,255,0.6)" : "#94a3b8";
+        return (
+            <div className={`flex justify-center w-full relative z-10 ${isPortrait ? 'gap-8 py-3' : 'gap-4 py-0'} ${className}`}>
+                {template.show_issue_date && (
+                    <div className="flex flex-col items-center">
+                        <span className="text-[9px] font-black tracking-[2px] uppercase mb-1" style={{ color: subColor }}>{template.issue_date_label || "Issue Date"}</span>
+                        <span className="text-[11px] font-bold" style={{ color: mainColor }}>{issueDateStr}</span>
+                    </div>
+                )}
+                {template.show_expiry_date && (
+                    <div className="flex flex-col items-center">
+                        <span className="text-[9px] font-black tracking-[2px] uppercase mb-1" style={{ color: subColor }}>{template.expiry_date_label || "Valid Until"}</span>
+                        <span className="text-[11px] font-bold" style={{ color: mainColor }}>{expiryDateStr}</span>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const EmergencyContactUI = ({ isDarkBg = false, className = "" }) => {
+        const gName = user.attributes?.["Guardian Full Name"] || user.attributes?.["Guardian Name"];
+        const gAddress = user.attributes?.["Guardian Address"];
+        const gPhone = user.attributes?.["Guardian Mobile Number"] || user.attributes?.["Guardian Contact Number"];
+
+        if (!gName && !gPhone && !gAddress) return null;
+
+        const mainColor = isDarkBg ? "#ffffff" : "#1e293b";
+        const subColor = isDarkBg ? "rgba(255,255,255,0.6)" : "#64748b";
+
+        return (
+            <div className={`flex flex-col items-start w-full text-left relative z-10 ${isPortrait ? 'px-8 py-2' : 'px-4 py-0'} ${className}`}>
+                <span className="text-[9px] font-black tracking-[1px] uppercase mb-1 opacity-70 block" style={{ color: subColor }}>
+                    In case of emergency, please contact:
+                </span>
+                <div className="flex flex-col items-start w-full">
+                    {gName && <span className="text-[10.5px] font-bold leading-tight tracking-wide block" style={{ color: mainColor }}>{gName}</span>}
+                    {gAddress && <span className="text-[10.5px] font-bold leading-tight tracking-wide mt-0.5 block max-w-full" style={{ color: mainColor }}>{gAddress}</span>}
+                    {gPhone && <span className="text-[10.5px] font-bold leading-tight tracking-wide mt-0.5 block" style={{ color: mainColor }}>{gPhone}</span>}
+                </div>
+            </div>
+        );
     };
 
     // ── CORPORATE TEMPLATE ──────────────────────────────
@@ -181,8 +253,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                         {/* Footer Section */}
                         <div className="px-8 pb-8 flex items-end justify-between">
                             {template.show_qr && (
-                                <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm">
-                                    <QRCode value={qrPayload} size={60} fgColor={primary} />
+                                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-sm transition-all hover:scale-110">
+                                    <QRCode value={qrPayload} size={80} fgColor={primary} />
                                 </div>
                             )}
                             {template.show_id_number && (
@@ -225,8 +297,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                         </div>
                                     )}
                                     {template.show_qr && (
-                                        <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-100">
-                                            <QRCode value={qrPayload} size={44} fgColor={ensureContrast(primary)} />
+                                        <div className="p-2 bg-white rounded-lg shadow-sm border border-slate-100">
+                                            <QRCode value={qrPayload} size={62} fgColor={ensureContrast(primary)} />
                                         </div>
                                     )}
                                 </div>
@@ -244,7 +316,7 @@ const IDCard = ({ user, template, side = "front" }) => {
                         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, ${secondary}20 10px, ${secondary}20 20px)` }} />
                     </div>
 
-                    <div className="flex-1 p-8 flex flex-col items-center text-center relative overflow-hidden">
+                    <div className={`flex-1 flex flex-col items-center text-center relative overflow-hidden ${isPortrait ? 'p-8' : 'px-4 py-2'}`}>
                         {template.custom_back_bg_url && (
                             <div className="absolute inset-0 z-0" style={{ backgroundColor: primary }}>
                                 <img crossOrigin="anonymous" src={resolveImageUrl(template.custom_back_bg_url)} alt="Back Template" className="w-full h-full object-cover mix-blend-luminosity opacity-40" />
@@ -255,57 +327,63 @@ const IDCard = ({ user, template, side = "front" }) => {
                         {/* Dynamic text color for back side */}
                         {(() => {
                             const isBackDark = !!template.custom_back_bg_url;
-                            const mainColor = isBackDark ? "#ffffff" : "#1e293b";
-                            const subColor = isBackDark ? "rgba(255,255,255,0.6)" : "#94a3b8";
-                            const accentColor = isBackDark ? "#ffffffcc" : "#6366f1";
+                            const mainColor = isBackDark ? "#ffffff" : "#0f172a";
+                            const subColor = isBackDark ? "rgba(255,255,255,0.6)" : "#64748b";
+                            const accentColor = isBackDark ? "#ffffffcc" : "#334155"; // Soft black for signature labels
 
                             return (
                                 <>
-                                    <div className="mb-10 w-full relative z-10">
-                                        <h4 className="text-[11px] font-black tracking-tight mb-3" style={{ color: mainColor }}>Terms & Conditions</h4>
-                                        <p className="text-[8px] leading-relaxed font-bold italic px-4" style={{ color: subColor }}>
-                                            {template.back_content || "This card is the property of the issuing institution. If found, please return to the nearest security office."}
-                                        </p>
+                                    <div className={`w-full flex-shrink-0 relative z-10 ${isPortrait ? 'mb-8' : 'mb-1'} px-6 mt-4`}>
+                                        <div className={`w-full rounded-[14px] ${isBackDark ? 'bg-white/5 border border-white/10' : 'bg-slate-50/80 border border-slate-100'} p-3 flex flex-col items-center justify-center`}>
+                                            <h5 className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: mainColor }}>Terms and Conditions</h5>
+                                            <p className={`text-[9px] font-bold ${isPortrait ? 'leading-relaxed' : 'leading-tight'} text-center`} style={{ color: subColor }}>
+                                                {template.back_content || "This card is the property of the issuing institution. If found, please return to the nearest security office."}
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <div className="mt-auto w-full space-y-10 relative z-10">
+                                    <div className={`w-full relative z-10 ${isPortrait ? 'mt-auto space-y-6' : 'mt-4 space-y-2'}`}>
+                                        <div className={`flex flex-col w-full ${isPortrait ? 'gap-4' : 'gap-1'}`}>
+                                            <EmergencyContactUI isDarkBg={!!template.custom_back_bg_url} />
+                                            <CardDatesUI isDarkBg={!!template.custom_back_bg_url} />
+                                        </div>
                                         <div className="flex justify-between items-end w-full px-2">
                                             {/* Left Signature */}
                                             <div className="flex flex-col items-center flex-1">
                                                 {(user.attributes?.signature || user.signature_url) ? (
-                                                    <div className="h-12 mb-[-12px] relative z-20">
+                                                    <div className={`relative z-20 ${isPortrait ? 'h-20 mb-[-20px]' : 'h-14 mb-[-14px]'}`}>
                                                         <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="h-full object-contain mix-blend-multiply brightness-110 contrast-125" />
                                                     </div>
                                                 ) : (
-                                                    <div className="h-10" />
+                                                    <div className={`${isPortrait ? 'h-10' : 'h-6'}`} />
                                                 )}
-                                                <span className="text-[9px] font-black tracking-tight block pt-2 px-2 whitespace-nowrap" style={{ color: mainColor }}>
+                                                <span className={`font-black tracking-tight block px-2 whitespace-nowrap ${isPortrait ? 'text-[9px] pt-2' : 'text-[9px] pt-1'}`} style={{ color: mainColor }}>
                                                     {displayName}
                                                 </span>
                                                 <div className="w-32 h-[1px] my-0.5" style={{ backgroundColor: isBackDark ? "rgba(255,255,255,0.2)" : "rgba(30,41,59,0.1)" }} />
-                                                <span className="text-[6px] font-black tracking-[1px] opacity-80" style={{ color: accentColor }}>{displayRole}'s Signature</span>
+                                                <span className="text-[8.5px] font-black tracking-[1px]" style={{ color: accentColor }}>{displayRole}'s Signature</span>
                                             </div>
 
                                             {/* Right Signature */}
                                             <div className="flex flex-col items-center flex-1">
                                                 {template.authorized_signature_url ? (
-                                                    <div className="h-10 mb-[-10px] relative z-20">
-                                                        <img crossOrigin="anonymous" src={template.authorized_signature_url} alt="Signature" className="h-full object-contain mix-blend-multiply brightness-110 contrast-125" />
+                                                    <div className={`relative z-20 ${isPortrait ? 'h-18 mb-[-18px]' : 'h-12 mb-[-12px]'}`}>
+                                                        <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Signature" className="h-full object-contain mix-blend-multiply brightness-110 contrast-125" />
                                                     </div>
                                                 ) : (
-                                                    <div className="h-10" />
+                                                    <div className={`${isPortrait ? 'h-10' : 'h-6'}`} />
                                                 )}
-                                                <span className="text-[9px] font-black tracking-tight block pt-2 px-2 whitespace-nowrap" style={{ color: mainColor }}>
+                                                <span className={`font-black tracking-tight block px-2 whitespace-nowrap ${isPortrait ? 'text-[9px] pt-2' : 'text-[9px] pt-1'}`} style={{ color: mainColor }}>
                                                     {template.authorized_name || "Registrar"}
                                                 </span>
                                                 <div className="w-32 h-[1px] my-0.5" style={{ backgroundColor: isBackDark ? "rgba(255,255,255,0.2)" : "rgba(30,41,59,0.1)" }} />
-                                                <span className="text-[6px] font-black tracking-[1px] opacity-80" style={{ color: accentColor }}>{template.signature_label || "Authorized Signature"}</span>
+                                                <span className="text-[8.5px] font-black tracking-[1px]" style={{ color: accentColor }}>{template.signature_label || "Authorized Signature"}</span>
                                             </div>
                                         </div>
 
                                         {template.show_barcode && (
-                                            <div className="flex flex-col items-center gap-1.5 w-full pt-4 border-t relative z-10" style={{ borderColor: isBackDark ? "rgba(255,255,255,0.1)" : "rgba(241,245,249,1)" }}>
-                                                <div className="h-12 w-full max-w-[240px]" style={{ backgroundImage: `repeating-linear-gradient(90deg, ${isBackDark ? '#ffffff20' : '#e2e8f0'} 0, ${isBackDark ? '#ffffff20' : '#e2e8f0'} 1px, transparent 1px, transparent 3px, ${isBackDark ? '#ffffff40' : '#cbd5e1'} 3px, ${isBackDark ? '#ffffff40' : '#cbd5e1'} 5px, transparent 5px, transparent 8px)` }} />
+                                            <div className={`flex flex-col items-center w-full border-t relative z-10 ${isPortrait ? 'gap-1.5 pt-4' : 'gap-0 pt-1'}`} style={{ borderColor: isBackDark ? "rgba(255,255,255,0.1)" : "rgba(241,245,249,1)" }}>
+                                                <div className={`w-full max-w-[240px] ${isPortrait ? 'h-12' : 'h-6'}`} style={{ backgroundImage: `repeating-linear-gradient(90deg, ${isBackDark ? '#ffffff20' : '#e2e8f0'} 0, ${isBackDark ? '#ffffff20' : '#e2e8f0'} 1px, transparent 1px, transparent 3px, ${isBackDark ? '#ffffff40' : '#cbd5e1'} 3px, ${isBackDark ? '#ffffff40' : '#cbd5e1'} 5px, transparent 5px, transparent 8px)` }} />
                                                 <div className="flex flex-col items-center">
                                                     <span className="text-[8px] font-mono font-black tracking-[4px] uppercase" style={{ color: isBackDark ? "rgba(255,255,255,0.4)" : "#cbd5e1" }}>
                                                         BPC {new Date().getFullYear()} - {displayID.toString().slice(-4).padStart(4, '0')}
@@ -377,8 +455,8 @@ const IDCard = ({ user, template, side = "front" }) => {
 
                             <div className="w-full flex items-end justify-between pb-10">
                                 {template.show_qr && (
-                                    <div className="bg-white p-3 rounded-2xl shadow-lg">
-                                        <QRCode value={qrPayload} size={64} fgColor={primary} />
+                                    <div className="bg-white p-4 rounded-2xl shadow-lg">
+                                        <QRCode value={qrPayload} size={88} fgColor={primary} />
                                     </div>
                                 )}
                                 {template.show_id_number && (
@@ -431,8 +509,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                     </div>
                                 )}
                                 {template.show_qr && (
-                                    <div className="p-1.5 bg-white rounded-lg shadow-sm">
-                                        <QRCode value={qrPayload} size={44} fgColor={primary} />
+                                    <div className="p-2 bg-white rounded-lg shadow-sm">
+                                        <QRCode value={qrPayload} size={62} fgColor={primary} />
                                     </div>
                                 )}
                             </div>
@@ -456,29 +534,33 @@ const IDCard = ({ user, template, side = "front" }) => {
                                 "{template.back_content || "This card is the property of the issuing institution. If found, please return to the nearest security office. Unauthorized use is subject to legal action and immediate revocation of system access."}"
                             </p>
 
-                            <div className="w-full space-y-8 mb-4">
+                            <div className="w-full space-y-6 mb-4">
+                                <div className="flex flex-col gap-3 w-full">
+                                    <EmergencyContactUI isDarkBg={!!template.custom_back_bg_url} />
+                                    <CardDatesUI isDarkBg={!!template.custom_back_bg_url} />
+                                </div>
                                 <div className="flex justify-between items-end w-full px-2">
                                     {/* Left Signature */}
                                     <div className="flex flex-col items-center flex-1 px-2 relative">
-                                        <div className="w-full h-12 flex items-end justify-center relative">
+                                        <div className="w-full h-18 flex items-end justify-center relative">
                                             {(user.attributes?.signature || user.signature_url) && (
-                                                <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="absolute bottom-[-5px] w-full h-[60px] object-contain mix-blend-multiply" />
+                                                <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="absolute bottom-[-8px] w-full h-[85px] object-contain mix-blend-multiply" />
                                             )}
                                         </div>
                                         <span className="text-[10px] font-black mb-1 relative z-10" style={{ color: primary }}>{displayName}</span>
                                         <div className="w-full h-[1px] bg-slate-200" />
-                                        <span className="text-[7px] font-black text-slate-400 mt-1 whitespace-nowrap">{displayRole}'s Signature</span>
+                                        <span className="text-[9px] font-black text-slate-400 mt-1 whitespace-nowrap">{displayRole}'s Signature</span>
                                     </div>
                                     {/* Right Signature */}
                                     <div className="flex flex-col items-center flex-1 px-2 relative">
-                                        <div className="w-full h-12 flex items-end justify-center relative">
+                                        <div className="w-full h-18 flex items-end justify-center relative">
                                             {template.authorized_signature_url && (
-                                                <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Authorized Signature" className="absolute bottom-[-5px] w-full h-[60px] object-contain mix-blend-multiply" />
+                                                <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Authorized Signature" className="absolute bottom-[-8px] w-full h-[85px] object-contain mix-blend-multiply" />
                                             )}
                                         </div>
                                         <span className="text-[10px] font-black mb-1 relative z-10" style={{ color: primary }}>{template.authorized_name || "Registrar"}</span>
                                         <div className="w-full h-[1px] bg-slate-200" />
-                                        <span className="text-[7px] font-black text-slate-400 mt-1 whitespace-nowrap">{template.signature_label || "Authorized Signature"}</span>
+                                        <span className="text-[9px] font-black text-slate-400 mt-1 whitespace-nowrap">{template.signature_label || "Authorized Signature"}</span>
                                     </div>
                                 </div>
 
@@ -524,28 +606,32 @@ const IDCard = ({ user, template, side = "front" }) => {
                             </div>
 
                             <div className="mt-auto w-full space-y-8">
+                                <div className="flex flex-col gap-4 w-full">
+                                    <EmergencyContactUI isDarkBg={!!template.custom_back_bg_url} />
+                                    <CardDatesUI isDarkBg={!!template.custom_back_bg_url} />
+                                </div>
                                 <div className="flex justify-between items-end w-full px-4">
                                     {/* Left Signature */}
                                     <div className="flex flex-col items-center flex-1 relative">
-                                        <div className="w-full h-10 flex items-end justify-center relative">
+                                        <div className="w-full h-16 flex items-end justify-center relative">
                                             {(user.attributes?.signature || user.signature_url) && (
-                                                <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="absolute bottom-0 w-full h-[50px] object-contain mix-blend-multiply" />
+                                                <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="absolute bottom-0 w-full h-[75px] object-contain mix-blend-multiply" />
                                             )}
                                         </div>
                                         <span className="text-[9px] font-black mb-0.5 relative z-10 truncate w-full text-center" style={{ color: textCol }}>{displayName}</span>
                                         <div className="w-32 h-[1px]" style={{ backgroundColor: isBackDark ? "rgba(255,255,255,0.3)" : "#e2e8f0" }} />
-                                        <span className="text-[7px] font-black mt-0.5 whitespace-nowrap" style={{ color: subCol }}>{displayRole}'s signature</span>
+                                        <span className="text-[9px] font-black mt-0.5 whitespace-nowrap" style={{ color: subCol }}>{displayRole}'s signature</span>
                                     </div>
                                     {/* Auth Signature */}
                                     <div className="flex flex-col items-center flex-1 relative">
-                                        <div className="w-full h-10 flex items-end justify-center relative">
+                                        <div className="w-full h-16 flex items-end justify-center relative">
                                             {template.authorized_signature_url && (
-                                                <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Authorized Signature" className="absolute bottom-0 w-full h-[50px] object-contain mix-blend-multiply" />
+                                                <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Authorized Signature" className="absolute bottom-0 w-full h-[75px] object-contain mix-blend-multiply" />
                                             )}
                                         </div>
                                         <span className="text-[9px] font-black mb-0.5 relative z-10 truncate w-full text-center" style={{ color: textCol }}>{template.authorized_name || "Registrar"}</span>
                                         <div className="w-32 h-[1px]" style={{ backgroundColor: isBackDark ? "rgba(255,255,255,0.3)" : "#e2e8f0" }} />
-                                        <span className="text-[7px] font-black mt-0.5 whitespace-nowrap" style={{ color: subCol }}>{template.signature_label || "Authorized signature"}</span>
+                                        <span className="text-[9px] font-black mt-0.5 whitespace-nowrap" style={{ color: subCol }}>{template.signature_label || "Authorized signature"}</span>
                                     </div>
                                 </div>
 
@@ -612,8 +698,8 @@ const IDCard = ({ user, template, side = "front" }) => {
 
                         <div className="px-8 pb-6 flex justify-center">
                             {template.show_qr && (
-                                <div className="p-3 border-2 border-dashed rounded-xl" style={{ borderColor: `${primary}30` }}>
-                                    <QRCode value={qrPayload} size={64} fgColor={primary} />
+                                <div className="p-4 border-2 border-dashed rounded-xl" style={{ borderColor: `${primary}30` }}>
+                                    <QRCode value={qrPayload} size={85} fgColor={primary} />
                                 </div>
                             )}
                         </div>
@@ -655,8 +741,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                         </div>
                                     )}
                                     {template.show_qr && (
-                                        <div className="p-1.5 border-2 border-dashed rounded-lg" style={{ borderColor: `${primary}30` }}>
-                                            <QRCode value={qrPayload} size={42} fgColor={primary} />
+                                        <div className="p-2 border-2 border-dashed rounded-lg" style={{ borderColor: `${primary}30` }}>
+                                            <QRCode value={qrPayload} size={58} fgColor={primary} />
                                         </div>
                                     )}
                                 </div>
@@ -691,13 +777,17 @@ const IDCard = ({ user, template, side = "front" }) => {
                             </div>
                         </div>
 
-                        <div className="mt-auto space-y-6">
+                        <div className="mt-auto space-y-4">
+                            <div className="flex flex-col gap-3 w-full">
+                                <EmergencyContactUI isDarkBg={!!template.custom_back_bg_url} />
+                                <CardDatesUI isDarkBg={!!template.custom_back_bg_url} />
+                            </div>
                             <div className="grid grid-cols-2 gap-4 border-t border-dashed border-slate-200 pt-6">
                                 <div className="flex flex-col items-center">
                                     {template.show_user_signature ? (
                                         <div className="flex flex-col items-center">
                                             {(user.attributes?.signature || user.signature_url) && (
-                                                <div className="h-12 mb-[-12px] relative z-20">
+                                                <div className={`relative z-20 ${isPortrait ? 'h-20 mb-[-20px]' : 'h-14 mb-[-14px]'}`}>
                                                     <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="h-full object-contain mix-blend-multiply" />
                                                 </div>
                                             )}
@@ -705,18 +795,18 @@ const IDCard = ({ user, template, side = "front" }) => {
                                                 {displayName}
                                             </span>
                                             <div className="w-full h-[1px] bg-slate-800 my-0.5 opacity-50" />
-                                            <span className="text-[6px] font-black text-slate-400 tracking-[1px]">{displayRole}'s Signature</span>
+                                            <span className="text-[8.5px] font-black text-slate-400 tracking-[1px]">{displayRole}'s Signature</span>
                                         </div>
                                     ) : (
                                         <div className="text-left">
-                                            <span className="text-[7px] font-black text-slate-400 tracking-wider block mb-1">Emergency Call</span>
+                                            <span className="text-[9px] font-black text-slate-400 tracking-wider block mb-1">Emergency Call</span>
                                             <span className="text-[10px] font-black tracking-widest" style={{ color: secondary }}>{template.back_contact || "+1 (555) 000-0000"}</span>
                                         </div>
                                     )}
                                 </div>
                                 <div className="flex flex-col items-center">
                                     {template.authorized_signature_url && (
-                                        <div className="h-10 mb-[-12px] relative z-20">
+                                        <div className={`relative z-20 ${isPortrait ? 'h-20 mb-[-20px]' : 'h-14 mb-[-14px]'}`}>
                                             <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Signature" className="h-full object-contain mix-blend-multiply" />
                                         </div>
                                     )}
@@ -724,7 +814,7 @@ const IDCard = ({ user, template, side = "front" }) => {
                                         {template.authorized_name || "Name of Registrar"}
                                     </span>
                                     <div className="w-full h-[1px] bg-slate-800 my-0.5 opacity-50" />
-                                    <span className="text-[6px] font-black text-slate-400 tracking-[1px]">{template.signature_label || "University Registrar"}</span>
+                                    <span className="text-[8.5px] font-black text-slate-400 tracking-[1px]">{template.signature_label || "University Registrar"}</span>
                                 </div>
                             </div>
 
@@ -773,8 +863,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                 <span className="font-black tracking-[3px]" style={{ fontSize: template.id_number_font_size ? `${template.id_number_font_size}px` : "9px", color: template.id_number_color || "#cbd5e1" }}>{displayID}</span>
                             )}
                             {template.show_qr && (
-                                <div className="p-2 rounded-xl bg-slate-50">
-                                    <QRCode value={qrPayload} size={48} fgColor={primary} />
+                                <div className="p-3 rounded-xl bg-slate-50">
+                                    <QRCode value={qrPayload} size={68} fgColor={primary} />
                                 </div>
                             )}
                         </div>
@@ -807,8 +897,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                         <span className="font-black tracking-[3px]" style={{ fontSize: template.id_number_font_size ? `${template.id_number_font_size}px` : "9px", color: template.id_number_color || "#cbd5e1" }}>{displayID}</span>
                                     )}
                                     {template.show_qr && (
-                                        <div className="p-1.5 rounded-lg bg-slate-50">
-                                            <QRCode value={qrPayload} size={40} fgColor={primary} />
+                                        <div className="p-2.5 rounded-lg bg-slate-50">
+                                            <QRCode value={qrPayload} size={58} fgColor={primary} />
                                         </div>
                                     )}
                                 </div>
@@ -835,12 +925,16 @@ const IDCard = ({ user, template, side = "front" }) => {
                             </p>
                         </div>
 
-                        <div className="w-full space-y-10">
+                        <div className="w-full space-y-6">
+                            <div className={`flex flex-col w-full ${isPortrait ? 'gap-4' : 'gap-0.5'}`}>
+                                <EmergencyContactUI isDarkBg={!!template.custom_back_bg_url} />
+                                <CardDatesUI isDarkBg={!!template.custom_back_bg_url} />
+                            </div>
                             <div className="flex justify-between items-end w-full px-4">
                                 {template.show_user_signature && (
                                     <div className="flex flex-col items-center flex-1">
                                         {(user.attributes?.signature || user.signature_url) && (
-                                            <div className="h-10 mb-[-12px] relative z-20">
+                                            <div className={`relative z-20 ${isPortrait ? 'h-20 mb-[-20px]' : 'h-14 mb-[-14px]'}`}>
                                                 <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="h-full object-contain mix-blend-multiply" />
                                             </div>
                                         )}
@@ -848,14 +942,14 @@ const IDCard = ({ user, template, side = "front" }) => {
                                             {displayName}
                                         </span>
                                         <div className="w-24 h-[1px] bg-slate-200 my-0.5" />
-                                        <span className="text-[7px] font-bold tracking-wider text-slate-400">
+                                        <span className="text-[9px] font-bold tracking-wider text-slate-400">
                                             {displayRole}'s signature
                                         </span>
                                     </div>
                                 )}
                                 <div className="flex flex-col items-center flex-1">
                                     {template.authorized_signature_url && (
-                                        <div className="h-10 mb-[-12px] relative z-20">
+                                        <div className={`relative z-20 ${isPortrait ? 'h-20 mb-[-20px]' : 'h-14 mb-[-14px]'}`}>
                                             <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Signature" className="h-full object-contain mix-blend-multiply" />
                                         </div>
                                     )}
@@ -863,7 +957,7 @@ const IDCard = ({ user, template, side = "front" }) => {
                                         {template.authorized_name || "Registrar"}
                                     </span>
                                     <div className="w-24 h-[1px] bg-slate-200 my-0.5" />
-                                    <span className="text-[7px] font-bold tracking-wider text-slate-400">
+                                    <span className="text-[9px] font-bold tracking-wider text-slate-400">
                                         {template.signature_label || "Authorized signature"}
                                     </span>
                                 </div>
@@ -921,8 +1015,8 @@ const IDCard = ({ user, template, side = "front" }) => {
 
                         <div className="relative z-10 px-8 pb-8 flex items-end justify-between mt-auto">
                             {template.show_qr && (
-                                <div className="p-2.5 bg-white rounded-2xl shadow-xl">
-                                    <QRCode value={qrPayload} size={56} fgColor={primary} />
+                                <div className="p-3 bg-white rounded-2xl shadow-xl">
+                                    <QRCode value={qrPayload} size={75} fgColor={primary} />
                                 </div>
                             )}
                             {template.show_id_number && (
@@ -953,8 +1047,8 @@ const IDCard = ({ user, template, side = "front" }) => {
 
                                     <div className="flex items-end gap-6 mt-auto">
                                         {template.show_qr && (
-                                            <div className="p-1.5 bg-white rounded-xl shadow-lg shrink-0">
-                                                <QRCode value={qrPayload} size={50} fgColor={primary} />
+                                            <div className="p-2.5 bg-white rounded-xl shadow-lg shrink-0">
+                                                <QRCode value={qrPayload} size={68} fgColor={primary} />
                                             </div>
                                         )}
                                         {template.show_id_number && (
@@ -979,6 +1073,10 @@ const IDCard = ({ user, template, side = "front" }) => {
         } else {
             // BACK SIDE - BOLD
             const dims = isPortrait ? "w-[320px] h-[500px]" : "w-[500px] h-[320px]";
+            const isBackDark = !!template.custom_back_bg_url;
+            const mainColor = isBackDark ? "#ffffff" : "#1e293b";
+            const subColor = isBackDark ? "rgba(255,255,255,0.6)" : "#64748b";
+
             return (
                 <div id="digital-id-card-back" className={`${dims} rounded-[28px] shadow-2xl relative overflow-hidden flex flex-col bg-white`}>
                     {template.custom_back_bg_url ? (
@@ -989,20 +1087,24 @@ const IDCard = ({ user, template, side = "front" }) => {
                         <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full -ml-40 -mt-40 opacity-10" style={{ backgroundColor: secondary }} />
                     )}
                     <div className="relative z-10 flex-1 p-10 flex flex-col">
-                        <div className="mb-auto">
-                            <h4 className="text-[12px] font-black tracking-[4px] uppercase mb-3" style={{ color: primary }}>Terms & Conditions</h4>
-                            <div className="w-12 h-1.5 rounded-full mb-4" style={{ backgroundColor: secondary }} />
-                            <p className="text-slate-500 text-[10px] leading-relaxed font-bold tracking-wide italic">
-                                "{template.back_content || "This card is for official use only. If found, please return to the issuing institution."}"
-                            </p>
+                        <div className={`w-full flex-shrink-0 relative z-10 ${isPortrait ? 'mb-8' : 'mb-1'} px-6`}>
+                            <div className={`w-full rounded-[14px] ${isBackDark ? 'bg-white/5 border border-white/10' : 'bg-slate-50/80 border border-slate-100'} p-3 flex items-center justify-center`}>
+                                <p className={`text-[7px] font-bold ${isPortrait ? 'leading-relaxed' : 'leading-tight'} text-center`} style={{ color: subColor }}>
+                                    {template.back_content || "This card is the property of the issuing institution. If found, please return to the nearest security office."}
+                                </p>
+                            </div>
                         </div>
 
                         <div className="w-full space-y-6">
+                            <div className="flex flex-col gap-3 w-full">
+                                <EmergencyContactUI isDarkBg={!!template.custom_back_bg_url} />
+                                <CardDatesUI isDarkBg={!!template.custom_back_bg_url} />
+                            </div>
                             <div className="flex items-end justify-between pt-6 border-t border-slate-100">
                                 {template.show_user_signature ? (
                                     <div className="flex flex-col items-center">
                                         {(user.attributes?.signature || user.signature_url) && (
-                                            <div className="h-10 mb-[-12px] relative z-20">
+                                            <div className="h-16 mb-[-18px] relative z-20">
                                                 <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="h-full object-contain" />
                                             </div>
                                         )}
@@ -1010,19 +1112,19 @@ const IDCard = ({ user, template, side = "front" }) => {
                                             {displayName}
                                         </span>
                                         <div className="w-24 h-[1px] bg-slate-200 my-0.5" />
-                                        <span className="text-slate-400 text-[7px] font-black tracking-[1.5px]">
+                                        <span className="text-slate-400 text-[9px] font-black tracking-[1.5px]">
                                             {displayRole}'s Signature
                                         </span>
                                     </div>
                                 ) : (
                                     <div>
-                                        <span className="text-slate-400 text-[8px] font-black tracking-wider block mb-2">Support</span>
+                                        <span className="text-slate-400 text-[10px] font-black tracking-wider block mb-2">Support</span>
                                         <span className="text-slate-900 text-[12px] font-black tracking-[2px]">{template.back_contact || "+1 (555) 000-0000"}</span>
                                     </div>
                                 )}
                                 <div className="text-right flex flex-col items-center">
                                     {template.authorized_signature_url && (
-                                        <div className="h-10 mb-[-12px] relative z-20">
+                                        <div className="h-16 mb-[-18px] relative z-20">
                                             <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Signature" className="h-full object-contain" />
                                         </div>
                                     )}
@@ -1030,7 +1132,7 @@ const IDCard = ({ user, template, side = "front" }) => {
                                         {template.authorized_name || "Name of Registrar"}
                                     </span>
                                     <div className="w-full h-[1px] bg-slate-200 my-0.5" />
-                                    <span className="text-slate-400 text-[7px] font-black tracking-[1.5px]">
+                                    <span className="text-slate-400 text-[9px] font-black tracking-[1.5px]">
                                         {template.signature_label || "University Registrar"}
                                     </span>
                                 </div>
@@ -1097,8 +1199,8 @@ const IDCard = ({ user, template, side = "front" }) => {
 
                         <div className="px-6 pb-5 flex items-end justify-between">
                             {template.show_qr && (
-                                <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
-                                    <QRCode value={qrPayload} size={52} fgColor={primary} />
+                                <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-sm">
+                                    <QRCode value={qrPayload} size={72} fgColor={primary} />
                                 </div>
                             )}
                             <div className="text-right">
@@ -1155,8 +1257,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                         </div>
                                     )}
                                     {template.show_qr && (
-                                        <div className="p-1.5 bg-white rounded-lg border border-slate-200 shadow-sm ml-auto">
-                                            <QRCode value={qrPayload} size={50} fgColor={primary} />
+                                        <div className="p-2.5 bg-white rounded-lg border border-slate-200 shadow-sm ml-auto">
+                                            <QRCode value={qrPayload} size={65} fgColor={primary} />
                                         </div>
                                     )}
                                 </div>
@@ -1191,12 +1293,16 @@ const IDCard = ({ user, template, side = "front" }) => {
                             </p>
                         </div>
 
-                        <div className="w-full space-y-8">
+                        <div className="w-full space-y-6">
+                            <div className="flex flex-col gap-3 w-full">
+                                <EmergencyContactUI isDarkBg={!!template.custom_back_bg_url} />
+                                <CardDatesUI isDarkBg={!!template.custom_back_bg_url} />
+                            </div>
                             <div className="flex justify-between items-end w-full px-4">
                                 {template.show_user_signature && (
                                     <div className="flex flex-col items-center flex-1">
                                         {(user.attributes?.signature || user.signature_url) && (
-                                            <div className="h-10 mb-[-12px] relative z-20">
+                                            <div className={`relative z-20 ${isPortrait ? 'h-20 mb-[-20px]' : 'h-14 mb-[-14px]'}`}>
                                                 <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="h-full object-contain mix-blend-multiply" />
                                             </div>
                                         )}
@@ -1204,20 +1310,20 @@ const IDCard = ({ user, template, side = "front" }) => {
                                             {displayName}
                                         </span>
                                         <div className="w-32 h-[1px] bg-slate-900 my-0.5 opacity-20" />
-                                        <span className="text-[6px] font-black text-slate-300 tracking-[1px] block">{displayRole}'s signature</span>
+                                        <span className="text-[8.5px] font-black text-slate-300 tracking-[1px] block">{displayRole}'s signature</span>
                                     </div>
                                 )}
                                 <div className="flex flex-col items-center flex-1">
                                     {template.authorized_signature_url && (
-                                        <div className="h-10 mb-[-12px] relative z-20">
-                                            <img crossOrigin="anonymous" src={template.authorized_signature_url} alt="Signature" className="h-full object-contain mix-blend-multiply" />
+                                        <div className={`relative z-20 ${isPortrait ? 'h-18 mb-[-18px]' : 'h-12 mb-[-12px]'}`}>
+                                            <img crossOrigin="anonymous" src={resolveImageUrl(template.authorized_signature_url)} alt="Signature" className="h-full object-contain mix-blend-multiply" />
                                         </div>
                                     )}
                                     <span className="text-[9px] font-black text-slate-900 tracking-tight block pt-2 px-2 whitespace-nowrap">
                                         {template.authorized_name || "Name of Registrar"}
                                     </span>
                                     <div className="w-32 h-[1px] bg-slate-900 my-0.5 opacity-20" />
-                                    <span className="text-[6px] font-black text-slate-300 tracking-[1px] block">{template.signature_label || "Authorized signature"}</span>
+                                    <span className="text-[8.5px] font-black text-slate-300 tracking-[1px] block">{template.signature_label || "Authorized signature"}</span>
                                 </div>
                             </div>
 
@@ -1305,8 +1411,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                 </div>
                             </div>
                             {template.show_qr && (
-                                <div className="relative z-10 p-1.5 bg-white rounded-lg shadow-xl shadow-black/10">
-                                    <QRCode value={qrPayload} size={44} fgColor={primary} />
+                                <div className="relative z-10 p-3 bg-white rounded-lg shadow-xl shadow-black/10">
+                                    <QRCode value={qrPayload} size={65} fgColor={primary} />
                                 </div>
                             )}
                         </div>
@@ -1357,8 +1463,8 @@ const IDCard = ({ user, template, side = "front" }) => {
                                 <div className="flex items-center justify-between w-full mt-auto">
                                     <BrandHeader light={false} compact={true} />
                                     {template.show_qr && (
-                                        <div className="p-1.5 bg-white rounded-lg shadow-lg border border-slate-100">
-                                            <QRCode value={qrPayload} size={48} fgColor={primary} />
+                                        <div className="p-2.5 bg-white rounded-lg shadow-lg border border-slate-100">
+                                            <QRCode value={qrPayload} size={68} fgColor={primary} />
                                         </div>
                                     )}
                                 </div>
@@ -1370,48 +1476,54 @@ const IDCard = ({ user, template, side = "front" }) => {
         } else {
             // BACK SIDE - PROFESSIONAL
             const dims = isPortrait ? "w-[320px] h-[500px]" : "w-[500px] h-[320px]";
+            const isBackDark = !!template.custom_back_bg_url;
+            const mainColor = isBackDark ? "#ffffff" : "#1e293b";
+            const subColor = isBackDark ? "rgba(255,255,255,0.6)" : "#64748b";
+
             return (
                 <div id="digital-id-card-back" className={`${dims} rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col bg-white border border-slate-100`}>
                     {template.custom_back_bg_url ? (
                         <div className="absolute inset-0 z-0">
-                            <img crossOrigin="anonymous" src={template.custom_back_bg_url} alt="Back Template" className="w-full h-full object-cover" />
+                            <img crossOrigin="anonymous" src={resolveImageUrl(template.custom_back_bg_url)} alt="Back Template" className="w-full h-full object-cover" />
                         </div>
                     ) : (
                         <div className="absolute inset-0 opacity-5" style={{ backgroundColor: primary, backgroundImage: `radial-gradient(${secondary} 1px, transparent 0)`, backgroundSize: "16px 16px" }} />
                     )}
 
                     <div className="relative z-10 flex-1 p-8 flex flex-col">
-                        <div className="mb-8 border-b-2 pb-4" style={{ borderColor: secondary }}>
-                            <h4 className="text-[14px] font-black tracking-wider" style={{ color: primary }}>Terms & Conditions</h4>
-                        </div>
-
-                        <div className="space-y-4 mb-auto">
-                            <div className="flex gap-4">
-                                <div className="mt-1.5 w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: secondary }} />
-                                <p className="text-[10px] leading-relaxed text-slate-600 font-medium">
-                                    {template.back_content || "Issuing authority remains the sole owner of this identification card."}
+                        <div className={`w-full flex-shrink-0 relative z-10 ${isPortrait ? 'mb-8' : 'mb-1'} px-6`}>
+                            <div className={`w-full rounded-[14px] ${isBackDark ? 'bg-white/5 border border-white/10' : 'bg-slate-50/80 border border-slate-100'} p-3 flex items-center justify-center`}>
+                                <p className={`text-[7px] font-bold ${isPortrait ? 'leading-relaxed' : 'leading-tight'} text-center`} style={{ color: subColor }}>
+                                    {template.back_content || "This card is the property of the issuing institution. If found, please return to the nearest security office."}
                                 </p>
                             </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 mt-4">
                             <div className="flex gap-4">
                                 <div className="mt-1.5 w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: secondary }} />
-                                <p className="text-[10px] leading-relaxed text-slate-600 font-medium">
+                                <p className="text-[10px] leading-relaxed text-slate-600 font-medium" style={{ color: mainColor }}>
                                     Misuse of campus resources or facilities is subject to disciplinary action.
                                 </p>
                             </div>
                             <div className="flex gap-4">
                                 <div className="mt-1.5 w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: secondary }} />
-                                <p className="text-[10px] leading-relaxed text-slate-600 font-medium italic">
+                                <p className="text-[10px] leading-relaxed text-slate-600 font-medium italic" style={{ color: subColor }}>
                                     {template.back_contact || "Emergency Contact: +63 000 000 0000"}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="space-y-8 mt-10">
+                        <div className="space-y-4 mt-auto">
+                            <div className={`flex flex-col w-full ${isPortrait ? 'gap-4' : 'gap-2'}`}>
+                                <EmergencyContactUI isDarkBg={!!template.custom_back_bg_url} />
+                                <CardDatesUI isDarkBg={!!template.custom_back_bg_url} />
+                            </div>
                             <div className="flex flex-col items-center text-center">
                                 {template.show_user_signature && (
                                     <>
                                         {(user.attributes?.signature || user.signature_url) && (
-                                            <div className="h-10 mb-[-8px] relative z-20">
+                                            <div className="h-16 mb-[-14px] relative z-20">
                                                 <img crossOrigin="anonymous" src={resolveImageUrl(user.attributes?.signature || user.signature_url)} alt="User Signature" className="h-full object-contain mix-blend-multiply" />
                                             </div>
                                         )}
@@ -1419,7 +1531,7 @@ const IDCard = ({ user, template, side = "front" }) => {
                                             {displayName}
                                         </span>
                                         <div className="w-48 h-[1px] bg-slate-800 my-1" />
-                                        <span className="text-[7px] font-black text-slate-400 tracking-[2px]">{displayRole}'s Signature</span>
+                                        <span className="text-[9px] font-black text-slate-400 tracking-[2px]">{displayRole}'s Signature</span>
                                     </>
                                 )}
                             </div>

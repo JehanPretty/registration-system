@@ -145,6 +145,11 @@ class IDTemplateBase(BaseModel):
     show_avatar: Optional[bool] = True
     show_id_number: Optional[bool] = True
     # Back Side Fields
+    show_issue_date: Optional[bool] = True
+    issue_date_label: Optional[str] = "Issue Date"
+    show_expiry_date: Optional[bool] = True
+    expiry_date_label: Optional[str] = "Valid Until"
+    expiry_date_value: Optional[str] = ""
     back_content: Optional[str] = "This card is the property of the issuing institution. If found, please return to the nearest security office."
     back_contact: Optional[str] = "+1 (555) 000-0000"
     show_barcode: Optional[bool] = True

@@ -100,6 +100,11 @@ class IDTemplate(Base):
     show_avatar = Column(Boolean, default=True)
     show_id_number = Column(Boolean, default=True)
     # Back Side Fields
+    show_issue_date = Column(Boolean, default=True)
+    issue_date_label = Column(String, default="Issue Date")
+    show_expiry_date = Column(Boolean, default=True)
+    expiry_date_label = Column(String, default="Valid Until")
+    expiry_date_value = Column(String, default="")
     back_content = Column(String, default="This card is the property of the issuing institution. If found, please return to the nearest security office.")
     back_contact = Column(String, default="+1 (555) 000-0000")
     show_barcode = Column(Boolean, default=True)

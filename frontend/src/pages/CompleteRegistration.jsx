@@ -231,7 +231,7 @@ const SummaryView = ({ sections, values }) => {
           <div key={section.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-1.5 h-4 bg-blue-600 rounded-full" />
-              <h4 className="text-xs font-black text-[#1a234b] uppercase tracking-wider">{sectionTitle}</h4>
+              <h4 className="text-xs font-black text-[#1a234b]  tracking-wider">{sectionTitle}</h4>
             </div>
             <div className={addressSection ? "space-y-4" : getSectionGridClass()}>
               {section.fields.map((field) => {
@@ -431,7 +431,7 @@ export default function CompleteRegistration() {
           faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
           faceapi.nets.faceLandmark68TinyNet.loadFromUri('/models'),
         ]);
-        
+
         // Defer heavier models for the final match step
         window.heavierModelsPromise = (async () => {
           try {
@@ -468,12 +468,12 @@ export default function CompleteRegistration() {
     let stream = null;
     const initStream = async () => {
       // alert("DEBUG: initStream called");
-      
+
       // Feature detection with legacy fallbacks
-      const getUserMedia = navigator.mediaDevices?.getUserMedia || 
-                          navigator.webkitGetUserMedia || 
-                          navigator.mozGetUserMedia || 
-                          navigator.msGetUserMedia;
+      const getUserMedia = navigator.mediaDevices?.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia ||
+        navigator.msGetUserMedia;
 
       if (!getUserMedia) {
         alert("Camera access is blocked. Please ensure you are using a secure connection (HTTPS) or have enabled Chrome Flags for this IP.");
@@ -481,14 +481,14 @@ export default function CompleteRegistration() {
         return;
       }
       try {
-        const constraints = { 
-          video: { 
+        const constraints = {
+          video: {
             facingMode: "user",
             width: { ideal: 640 },
             height: { ideal: 480 }
-          } 
+          }
         };
-        
+
         let localStream;
         if (navigator.mediaDevices?.getUserMedia) {
           localStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -498,13 +498,13 @@ export default function CompleteRegistration() {
             getUserMedia.call(navigator, constraints, resolve, reject);
           });
         }
-        
+
         stream = localStream; // assign to outer variable for cleanup
         if (videoRef.current) {
           videoRef.current.srcObject = localStream;
           videoRef.current.onloadedmetadata = () => {
             videoRef.current.play().catch(e => {
-               console.error("Video play error:", e);
+              console.error("Video play error:", e);
             });
             startFaceDetectionLoop();
           };
@@ -512,13 +512,13 @@ export default function CompleteRegistration() {
       } catch (err) {
         console.error("Camera Hardware Error:", err);
         let userMsg = `Camera Error: ${err.name}\n${err.message}`;
-        
+
         if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
           userMsg += "\n\nSuggestions:\n1. Close all other apps using the camera.\n2. Restart your phone.\n3. Ensure Chrome has Camera permission in Android Settings.";
         } else if (err.name === 'NotAllowedError') {
           userMsg += "\n\nPlease allow camera access when prompted by Chrome.";
         }
-        
+
         alert(userMsg);
         closeWebCamera();
       }
@@ -640,7 +640,7 @@ export default function CompleteRegistration() {
           .withFaceLandmarks(true)
           .withFaceDescriptor();
         if (det) { console.log(`[FaceMatch] ${label}: Tiny detected`); return det; }
-        
+
         return null;
       };
 
@@ -874,7 +874,7 @@ export default function CompleteRegistration() {
             const tooFarRight = faceCenterX > (videoWidth - roiX + 20);
             const tooHigh = faceCenterY < (roiY - 20);
             const tooLow = faceCenterY > (videoHeight - roiY + 20);
-            const tooSmall = box.width < (videoWidth * 0.15); 
+            const tooSmall = box.width < (videoWidth * 0.15);
             const tooLarge = box.width > (videoWidth * 0.75);
 
             let hint = 'Perfect! Hold still';
@@ -965,7 +965,7 @@ export default function CompleteRegistration() {
   useEffect(() => {
     if (!user) {
       navigate("/login", { replace: true });
-    } else if (user?.attributes?.is_profile_complete || user?.attributes?.kyc_pipeline_passed) {
+    } else if (user?.attributes?.is_profile_complete || user?.status === 'verified') {
       navigate("/dashboard", { replace: true });
     }
   }, [user, navigate]);
@@ -1547,7 +1547,7 @@ export default function CompleteRegistration() {
           </div>
           <button
             onClick={() => navigate("/dashboard")}
-            className="mt-10 w-full py-5 rounded-2xl bg-[#76d246] text-white font-black text-sm shadow-[0_10px_25px_rgba(118,210,70,0.3)] hover:bg-[#68bd3d] transition-all active:scale-95 uppercase tracking-widest"
+            className="mt-10 w-full py-5 rounded-2xl bg-[#76d246] text-white font-black text-sm shadow-[0_10px_25px_rgba(118,210,70,0.3)] hover:bg-[#68bd3d] transition-all active:scale-95 tracking-widest"
           >
             OK
           </button>
@@ -1654,22 +1654,30 @@ export default function CompleteRegistration() {
                 )}
               </div>
 
-              <div className="flex gap-4 mt-8">
-                {activeStepIndex > 0 && (
+              <div className="flex flex-col gap-3 mt-8">
+                <div className="flex gap-4">
+                  {activeStepIndex > 0 && (
+                    <button
+                      onClick={handleBack}
+                      className="flex-1 py-4 bg-white border border-slate-200 text-[#1a234b] rounded-2xl font-black text-[10px] hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Back
+                    </button>
+                  )}
                   <button
-                    onClick={handleBack}
-                    className="flex-1 py-4 bg-white border border-slate-200 text-[#1a234b] rounded-2xl font-black text-[10px] hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    onClick={handleNext}
+                    className="flex-[2] py-4 bg-[#1a234b] text-white rounded-2xl font-black text-[10px] hover:bg-blue-900 transition-all shadow-xl shadow-blue-900/10 active:scale-95 flex items-center justify-center gap-2"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                    Back
+                    Next
+                    <ArrowRight className="w-5 h-5" />
                   </button>
-                )}
+                </div>
                 <button
-                  onClick={handleNext}
-                  className="flex-[2] py-4 bg-[#1a234b] text-white rounded-2xl font-black text-[10px] hover:bg-blue-900 transition-all shadow-xl shadow-blue-900/10 active:scale-95 flex items-center justify-center gap-2"
+                  onClick={handleSkip}
+                  className="w-full py-4 bg-slate-50 border border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] hover:bg-slate-100 transition-all active:scale-95 text-center mt-2"
                 >
-                  Next
-                  <ArrowRight className="w-5 h-5" />
+                  Skip for now
                 </button>
               </div>
             </div>
@@ -1686,19 +1694,27 @@ export default function CompleteRegistration() {
 
               <SummaryView sections={formSections} values={dynamicValues} />
 
-              <div className="flex gap-4 mt-12">
+              <div className="flex flex-col gap-3 mt-12">
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleBack}
+                    className="flex-1 py-4 bg-white border border-slate-200 text-[#1a234b] rounded-2xl font-black text-[10px] hover:bg-slate-50 transition-all"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleNext}
+                    className="flex-[2] py-4 bg-[#1a234b] text-white rounded-2xl font-black text-[10px] hover:bg-blue-900 transition-all flex items-center justify-center gap-2"
+                  >
+                    Continue
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
                 <button
-                  onClick={handleBack}
-                  className="flex-1 py-4 bg-white border border-slate-200 text-[#1a234b] rounded-2xl font-black text-[10px] hover:bg-slate-50 transition-all"
+                  onClick={handleSkip}
+                  className="w-full py-4 bg-slate-50 border border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] hover:bg-slate-100 transition-all active:scale-95 text-center mt-2"
                 >
-                  Back to Form
-                </button>
-                <button
-                  onClick={handleNext}
-                  className="flex-[2] py-4 bg-[#1a234b] text-white rounded-2xl font-black text-[10px] hover:bg-blue-900 transition-all flex items-center justify-center gap-2"
-                >
-                  Looks Good, Continue
-                  <ArrowRight className="w-5 h-5" />
+                  Skip for now
                 </button>
               </div>
             </div>
@@ -1730,7 +1746,7 @@ export default function CompleteRegistration() {
                           setEmailConfirm(e.target.value);
                           if (errors.email) setErrors(prev => ({ ...prev, email: null }));
                         }}
-                        autoComplete="email"
+                        autoComplete="off"
                         className={`w-full pl-12 pr-4 py-4 bg-slate-50 border rounded-2xl text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-[#1a234b] transition-all ${errors.email ? 'border-red-400' : 'border-slate-100'}`}
                       />
                     </div>
@@ -1749,7 +1765,7 @@ export default function CompleteRegistration() {
                           if (errors.password) setErrors(prev => ({ ...prev, password: null }));
                         }}
                         placeholder="Enter your account password"
-                        autoComplete="current-password"
+                        autoComplete="new-password"
                         className={`w-full pl-12 pr-12 py-4 bg-slate-50 border rounded-2xl outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-[#1a234b] transition-all text-sm font-bold ${errors.password ? 'border-red-400' : 'border-slate-200'}`}
                       />
                       <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
@@ -1779,7 +1795,7 @@ export default function CompleteRegistration() {
                   </div>
                   <button
                     onClick={handleSkip}
-                    className="w-full py-4 text-slate-400 text-[11px] font-black hover:text-[#1a234b] transition-colors text-center"
+                    className="w-full py-4 bg-slate-50 border border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] hover:bg-slate-100 transition-all active:scale-95 text-center mt-2"
                   >
                     Skip for now
                   </button>
@@ -1815,7 +1831,7 @@ export default function CompleteRegistration() {
 
                     <button
                       onClick={() => navigate("/dashboard")}
-                      className="mt-10 w-full py-5 rounded-2xl bg-[#76d246] text-white font-black text-sm shadow-[0_10px_25px_rgba(118,210,70,0.3)] hover:bg-[#68bd3d] transition-all active:scale-95 uppercase tracking-widest"
+                      className="mt-10 w-full py-5 rounded-2xl bg-[#76d246] text-white font-black text-sm shadow-[0_10px_25px_rgba(118,210,70,0.3)] hover:bg-[#68bd3d] transition-all active:scale-95 tracking-widest"
                     >
                       OK
                     </button>
@@ -1833,7 +1849,7 @@ export default function CompleteRegistration() {
 
                   {/* Instructions */}
                   <div className="w-full bg-blue-50 rounded-[20px] p-4 mb-5 border border-blue-100 text-left">
-                    <p className="text-[9px] font-black text-blue-700 uppercase tracking-widest mb-3">📋 Before You Upload</p>
+                    <p className="text-[9px] font-black text-blue-700  tracking-widest mb-3">📋 Before You Upload</p>
                     <div className="flex flex-col gap-1.5">
                       {[
                         { ok: true, text: 'Upload your own valid government ID' },
@@ -1854,7 +1870,7 @@ export default function CompleteRegistration() {
 
                   {/* Document Type Selector */}
                   <div className={`w-full mb-5 text-left rounded-2xl transition-all duration-300 ${kycDocTypeError ? 'bg-red-50 border border-red-300 p-3' : ''}`}>
-                    <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${kycDocTypeError ? 'text-red-500' : 'text-slate-500'}`}>
+                    <p className={`text-[10px] font-black  tracking-widest mb-3 ${kycDocTypeError ? 'text-red-500' : 'text-slate-500'}`}>
                       {kycDocTypeError ? '⚠ Please select an ID type first' : 'Select ID Type'}
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -1924,7 +1940,7 @@ export default function CompleteRegistration() {
                           <div className="absolute inset-0 border-2 border-white/20 rounded-full" />
                           <div className="absolute inset-0 border-2 border-white rounded-full border-t-transparent animate-spin" />
                         </div>
-                        <p className="text-[10px] font-black text-white uppercase tracking-[2px] animate-pulse">Matching name on ID to profile...</p>
+                        <p className="text-[10px] font-black text-white  tracking-[2px] animate-pulse">Matching name on ID to profile...</p>
                         <div className="mt-4 w-full max-w-[100px] h-1 bg-white/10 rounded-full overflow-hidden">
                           <div className="h-full bg-white transition-all duration-300" style={{ width: `${ocrProgress}%` }} />
                         </div>
@@ -1984,9 +2000,12 @@ export default function CompleteRegistration() {
                     disabled={isScanningDoc || scanMatchResult === 'fail' || scanMatchResult !== 'pass' || !kycFile}
                     className={`w-full py-5 rounded-3xl font-black text-[10px] shadow-2xl bg-[#1a234b] text-white flex items-center justify-center gap-3 hover:bg-blue-900 transition-all ${(isScanningDoc || scanMatchResult !== 'pass' || !kycFile) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {isScanningDoc ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue to Selfie Verification <ArrowRight className="w-5 h-5" /></>}
+                    {isScanningDoc ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue <ArrowRight className="w-5 h-5" /></>}
                   </button>
-                  <button onClick={handleBack} className="mt-6 text-slate-400 text-[10px] font-black hover:text-[#1a234b] transition-colors">Go Back</button>
+                  <div className="flex flex-col gap-3 mt-6">
+                    <button onClick={handleBack} className="w-full py-4 bg-white border border-slate-200 text-[#1a234b] rounded-2xl font-black text-[10px] hover:bg-slate-50 transition-all active:scale-95 text-center">Go Back</button>
+                    <button onClick={handleSkip} className="w-full py-4 bg-slate-50 border border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] hover:bg-slate-100 transition-all active:scale-95 text-center">Skip for now</button>
+                  </div>
                 </div>
               ) : (
                 <div className="bg-white rounded-[40px] p-10 shadow-sm border border-slate-100 text-center">
@@ -2087,7 +2106,10 @@ export default function CompleteRegistration() {
                   >
                     Start AI Document Verification <ArrowRight className="w-5 h-5" />
                   </button>
-                  <button onClick={() => setKycSubStep(1)} disabled={isVerifying || isMatchingFace} className="mt-6 text-slate-400 text-[10px] font-black hover:text-[#1a234b] transition-colors">Back</button>
+                  <div className="flex flex-col gap-3 mt-6">
+                    <button onClick={() => setKycSubStep(1)} disabled={isVerifying || isMatchingFace} className="w-full py-4 bg-white border border-slate-200 text-[#1a234b] rounded-2xl font-black text-[10px] hover:bg-slate-50 transition-all active:scale-95 text-center">Back</button>
+                    <button onClick={handleSkip} disabled={isVerifying || isMatchingFace} className="w-full py-4 bg-slate-50 border border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] hover:bg-slate-100 transition-all active:scale-95 text-center">Skip for now</button>
+                  </div>
                 </div>
               )}
             </div>
@@ -2115,7 +2137,7 @@ export default function CompleteRegistration() {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-[#1a234b] tracking-tight">AI Document Verification</h3>
-                  <p className="text-[9px] font-bold text-slate-400 tracking-widest uppercase">KYC Security Pipeline</p>
+                  <p className="text-[9px] font-bold text-slate-400 tracking-widest uppercase"> Security Pipeline</p>
                 </div>
               </div>
 
@@ -2129,7 +2151,7 @@ export default function CompleteRegistration() {
                   <p className="text-[10px] font-bold text-red-500 leading-relaxed mb-8 px-2">{kycPipelineError}</p>
                   <button
                     onClick={resetKycPipeline}
-                    className="w-full py-4 rounded-2xl bg-red-500 text-white font-black text-[10px] tracking-widest uppercase shadow-lg hover:bg-red-600 transition-colors active:scale-95"
+                    className="w-full py-4 rounded-2xl bg-red-500 text-white font-black text-[10px] tracking-widest shadow-lg hover:bg-red-600 transition-colors active:scale-95"
                   >
                     Retry Verification
                   </button>
@@ -2163,7 +2185,7 @@ export default function CompleteRegistration() {
 
                   {ocrProgress < 100 ? (
                     <div className="space-y-4 px-6">
-                      <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest animate-pulse">Scanning Document: {ocrProgress}%</p>
+                      <p className="text-[10px] font-bold text-indigo-600  tracking-widest animate-pulse">Scanning Document: {ocrProgress}%</p>
                       <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-indigo-600 transition-all duration-300"
@@ -2185,7 +2207,7 @@ export default function CompleteRegistration() {
                   )}
 
                   <div className="mt-10 flex flex-col items-center gap-1.5">
-                    <div className="text-[10px] font-black text-indigo-600 tracking-widest uppercase animate-pulse">
+                    <div className="text-[10px] font-black text-indigo-600 tracking-widest  animate-pulse">
                       {ocrProgress < 100
                         ? "Analyzing Textures"
                         : (kycPipelineError === 'Matching Profile Data...'
@@ -2209,7 +2231,7 @@ export default function CompleteRegistration() {
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
               <div>
                 <h3 className="text-lg font-black text-[#1a234b] uppercase tracking-tighter">Liveness Scan</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Anti-Spoofing Security Check</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest"> Security Check</p>
               </div>
               <button onClick={closeWebCamera} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all">
                 <ChevronLeft className="w-5 h-5" />
@@ -2260,7 +2282,7 @@ export default function CompleteRegistration() {
                       livenessRef.current = { challengeIndex: 0, holdFrames: 0, accumulated: 0 };
                       startFaceDetectionLoop();
                     }}
-                    className="w-full max-w-[220px] py-3 rounded-2xl bg-white text-red-600 font-black text-[11px] uppercase tracking-widest shadow-lg hover:bg-red-50 active:scale-95 transition-all"
+                    className="w-full max-w-[220px] py-3 rounded-2xl bg-white text-red-600 font-black text-[11px] tracking-widest shadow-lg hover:bg-red-50 active:scale-95 transition-all"
                   >
                     Try Again
                   </button>
@@ -2346,7 +2368,7 @@ export default function CompleteRegistration() {
                   <p className="text-[9px] font-bold text-slate-400 text-center">Liveness confirmed. Press OK to capture your biometric photo and proceed.</p>
                   <button
                     onClick={() => captureWebPhoto(true)}
-                    className="w-full py-4 mt-1 rounded-2xl bg-blue-600 text-white font-black text-sm uppercase tracking-widest shadow-xl shadow-blue-600/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 mt-1 rounded-2xl bg-blue-600 text-white font-black text-sm  tracking-widest shadow-xl shadow-blue-600/30 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2"
                   >
                     OK
                   </button>
@@ -2413,7 +2435,7 @@ export default function CompleteRegistration() {
               <div className="flex justify-center gap-3">
                 <button
                   onClick={() => setCropAspectRatio(3 / 4)}
-                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${cropAspectRatio === 3 / 4 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-white/10 text-white hover:bg-white/20'
+                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] tracking-widest transition-all ${cropAspectRatio === 3 / 4 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-white/10 text-white hover:bg-white/20'
                     }`}
                 >
                   <div className="w-3 h-4 border-2 border-current rounded-sm"></div>
@@ -2421,7 +2443,7 @@ export default function CompleteRegistration() {
                 </button>
                 <button
                   onClick={() => setCropAspectRatio(1)}
-                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${cropAspectRatio === 1 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-white/10 text-white hover:bg-white/20'
+                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px]  tracking-widest transition-all ${cropAspectRatio === 1 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-white/10 text-white hover:bg-white/20'
                     }`}
                 >
                   <div className="w-4 h-4 border-2 border-current rounded-sm"></div>

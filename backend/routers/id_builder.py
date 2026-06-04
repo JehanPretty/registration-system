@@ -43,6 +43,11 @@ def get_id_template(role_name: str, db: Session = Depends(get_db)):
             "show_qr": True,
             "show_avatar": True,
             "show_id_number": True,
+            "show_issue_date": True,
+            "issue_date_label": "Issue Date",
+            "show_expiry_date": True,
+            "expiry_date_label": "Valid Until",
+            "expiry_date_value": "",
             "back_content": "This card is the property of the issuing institution. If found, please return to the nearest security office.",
             "back_contact": "+1 (555) 000-0000",
             "show_barcode": True,
@@ -71,11 +76,17 @@ def save_id_template(template_data: IDTemplateCreate, db: Session = Depends(get_
         
         if db_template:
             # Update existing
-            for key, value in template_data.dict(exclude={'id', 'updated_at'}).items():
+            update_data = template_data.dict()
+            update_data.pop('id', None)
+            update_data.pop('updated_at', None)
+            for key, value in update_data.items():
                 setattr(db_template, key, value)
         else:
             # Create new
-            db_template = IDTemplate(**template_data.dict())
+            create_data = template_data.dict()
+            create_data.pop('id', None)
+            create_data.pop('updated_at', None)
+            db_template = IDTemplate(**create_data)
             db.add(db_template)
         
         db.commit()

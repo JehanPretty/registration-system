@@ -616,7 +616,10 @@ function Users() {
                           key !== 'signed_up_at' &&
                           key !== 'completed_at' &&
                           key !== 'kyc_document' &&
-                          key !== 'selfie_document';
+                          key !== 'selfie_document' &&
+                          key !== 'has_applied_for_id' &&
+                          key !== 'kyc_pipeline_passed' &&
+                          key !== 'physical_id_requested';
                       });
 
                       const formatDate = (dateStr) => {

@@ -40,7 +40,7 @@ const SearchableSelect = ({
   return (
     <div className="relative w-full" ref={dropdownRef}>
       {label && (
-        <label className="block text-[10px] font-black text-slate-500 mb-1.5 ml-1 uppercase tracking-widest">
+        <label className="block text-[10px] font-black text-slate-500 mb-1.5 ml-1 tracking-widest">
           {label}
         </label>
       )}

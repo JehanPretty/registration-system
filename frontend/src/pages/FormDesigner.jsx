@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { message } from "antd";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import {
     Loader2,
     CheckCircle2,
@@ -126,7 +128,6 @@ const FormDesigner = ({
             fields: [
                 { label: "Email Address", type: "email", required: true },
                 { label: "Mobile Number", type: "number", required: true },
-                { label: "Telephone", type: "number", required: false },
             ]
         },
         address: {
@@ -146,11 +147,9 @@ const FormDesigner = ({
             title: "Academic Information",
             icon: <GraduationCap className="w-5 h-5 md:w-6 md:h-6" />,
             fields: [
-                { label: "ID Number", type: "text", required: true },
                 { label: "Course/Program", type: "text", required: true },
                 { label: "Department", type: "text", required: true },
                 { label: "Year Level", type: "yearLevel", required: true },
-                { label: "Section", type: "text", required: true },
                 { label: "School address", type: "text", required: true },
             ]
         },
@@ -170,7 +169,7 @@ const FormDesigner = ({
     const addTemplateSection = (templateKey) => {
         const template = SECTION_TEMPLATES[templateKey];
         const alreadyExists = formSections.some(s => (s.role_name || s.role) === selectedRole && s.sectionTitle === template.title);
-        if (alreadyExists) return message.warning(`The "${template.title}" is already in your form!`);
+        if (alreadyExists) { message.destroy(); return message.warning(`The "${template.title}" is already in your form!`); }
 
         const newSection = {
             id: `sec-${Date.now()}`,
@@ -179,6 +178,7 @@ const FormDesigner = ({
             fields: template.fields.map((f, i) => ({ ...f, id: `f-${Date.now()}-${i}` }))
         };
         setFormSections(prev => [...prev, newSection]);
+        message.destroy();
         message.success(`"${template.title}" added successfully!`);
     };
 
@@ -281,7 +281,20 @@ const FormDesigner = ({
             );
         }
 
-        return <input type={field.type === "number" ? "number" : "text"} className={baseClasses} placeholder={field.placeholder || `Enter ${field.label}`} value={previewValues[field.id] || ""} onChange={handlePreviewChange} />;
+        const isPhone = field.type === "number" || (field.label && (field.label.toLowerCase().includes("phone") || field.label.toLowerCase().includes("mobile") || field.label.toLowerCase().includes("number")));
+        if (isPhone) {
+            return (
+                <PhoneInput
+                    international
+                    defaultCountry="PH"
+                    value={previewValues[field.id] || ""}
+                    onChange={val => setPreviewValues({ ...previewValues, [field.id]: val })}
+                    className={baseClasses + " gap-3 [&>.PhoneInputCountry]:ml-1 [&>input]:bg-transparent [&>input]:outline-none [&>input]:w-full"}
+                />
+            );
+        }
+
+        return <input type="text" className={baseClasses} placeholder={field.placeholder || `Enter ${field.label}`} value={previewValues[field.id] || ""} onChange={handlePreviewChange} />;
     };
 
     if (showCategorySelection) {

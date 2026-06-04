@@ -11,6 +11,8 @@ import { API_BASE_URL } from "../config";
 import IDCard from "../components/IDCard";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
+import { toPng } from "html-to-image";
+import { Loader2 } from "lucide-react";
 
 const MissionControl = () => {
     const currentUser = JSON.parse(localStorage.getItem("regisSys_user")) || {};
@@ -47,6 +49,7 @@ const MissionControl = () => {
     const [selectedOrientation, setSelectedOrientation] = useState(null); // 'landscape' or 'portrait'
     const [previewSide, setPreviewSide] = useState('front'); // 'front' or 'back'
     const [isFullPreview, setIsFullPreview] = useState(false);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
     // General Layout Settings
     const [isDeploying, setIsDeploying] = useState(false);
@@ -492,6 +495,88 @@ const MissionControl = () => {
         }
     };
 
+    // Single ID Backup Print Workflow
+    const handleBackupPrint = async () => {
+        if (!selectedApp || !selectedApp.user) return;
+        setIsGeneratingPDF(true);
+        setDeployStatus('Generating high-quality ID Backup...');
+        
+        try {
+            await new Promise(r => setTimeout(r, 100)); // allow rendering
+
+            const frontEl = document.getElementById("pdf-front-capture");
+            const backEl = document.getElementById("pdf-back-capture");
+            if (!frontEl || !backEl) throw new Error("Could not find ID card elements.");
+
+            const template = templateByRole[selectedApp.user?.role_context];
+            const isPortrait = template?.orientation !== 'landscape';
+            const pdfWidthMm = isPortrait ? 53.975 : 85.725;
+            const pdfHeightMm = isPortrait ? 85.725 : 53.975;
+
+            const frontDataUrl = await toPng(frontEl, {
+                pixelRatio: 4,
+                cacheBust: true,
+                backgroundColor: '#ffffff',
+                style: { transform: 'scale(1)', transformOrigin: 'top left' }
+            });
+
+            const backDataUrl = await toPng(backEl, {
+                pixelRatio: 4,
+                cacheBust: true,
+                backgroundColor: '#ffffff',
+                style: { transform: 'scale(1)', transformOrigin: 'top left' }
+            });
+
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            });
+
+            // Add Header Text
+            pdf.setTextColor(15, 23, 42); // slate-900
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(16);
+            pdf.text("Official Digital Identification Card", 105, 30, { align: "center" });
+
+            pdf.setTextColor(71, 85, 105); // slate-600
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(10);
+            pdf.text("Archival Print - Backup Copy", 105, 38, { align: "center" });
+            pdf.text("Pre-scaled to standard ID format (3.375 x 2.125 inches).", 105, 43, { align: "center" });
+            pdf.text("Please ensure print settings are set to 'Actual Size' or 'Scale: 100%'.", 105, 48, { align: "center" });
+
+            // Place Images
+            const startY = 70;
+            if (isPortrait) {
+                const gap = 15;
+                const totalWidth = (pdfWidthMm * 2) + gap;
+                const startX = (210 - totalWidth) / 2;
+                pdf.addImage(frontDataUrl, 'PNG', startX, startY, pdfWidthMm, pdfHeightMm);
+                pdf.addImage(backDataUrl, 'PNG', startX + pdfWidthMm + gap, startY, pdfWidthMm, pdfHeightMm);
+            } else {
+                const startX = (210 - pdfWidthMm) / 2;
+                const gap = 20;
+                pdf.addImage(frontDataUrl, 'PNG', startX, startY, pdfWidthMm, pdfHeightMm);
+                pdf.addImage(backDataUrl, 'PNG', startX, startY + pdfHeightMm + gap, pdfWidthMm, pdfHeightMm);
+            }
+
+            const formattedId = selectedApp.user?.external_id || selectedApp.user?.id || 'Card';
+            const filename = `Digital_ID_Backup_${formattedId}.pdf`;
+            pdf.save(filename);
+            
+            logActivity(`Downloaded backup print for ${selectedApp.user.name}`, 'info');
+
+        } catch (err) {
+            console.error("PDF generation failed:", err);
+            alert(`PDF Backup Error: ${err.message}`);
+        } finally {
+            setIsGeneratingPDF(false);
+            setDeployStatus("");
+        }
+    };
+
     // Batch Print IDs Workflow
     const triggerBatchPrint = (orientation) => {
         setSelectedOrientation(orientation);
@@ -525,17 +610,19 @@ const MissionControl = () => {
             for (let i = 0; i < sheets.length; i++) {
                 setDeployStatus(`Capturing layout page ${i + 1} of ${sheets.length}...`);
                 sheets[i].scrollIntoView({ behavior: 'instant', block: 'center' });
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 800)); // Increased delay for layout flush
 
-                const canvas = await html2canvas(sheets[i], {
-                    useCORS: true,
-                    scale: 2,
-                    backgroundColor: '#ffffff'
+                const dataUrl = await toPng(sheets[i], {
+                    pixelRatio: 4,
+                    cacheBust: true,
+                    style: {
+                        transform: 'scale(1)',
+                        transformOrigin: 'top left'
+                    }
                 });
-                const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
 
                 if (i > 0) pdf.addPage([pdfWidthMm, pdfHeightMm], isPortraitID ? 'landscape' : 'portrait');
-                pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidthMm, pdfHeightMm);
+                pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidthMm, pdfHeightMm, undefined, 'FAST');
             }
 
             const filename = `RegisSys_Batch_${selectedOrientation}_${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -1688,6 +1775,16 @@ const MissionControl = () => {
                                                         <p className="text-[10px] font-medium text-amber-500/70 mt-1">Physical card has been produced. Standard local/postal delivery processing in place.</p>
                                                     </div>
                                                 )}
+                                                {selectedApp.status === "completed" && (
+                                                    <button
+                                                        onClick={handleBackupPrint}
+                                                        disabled={isGeneratingPDF}
+                                                        className="w-full py-4 rounded-2xl bg-indigo-600 disabled:opacity-50 text-white font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 mt-4"
+                                                    >
+                                                        {isGeneratingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+                                                        {isGeneratingPDF ? "Generating Backup..." : "Backup / Re-print ID"}
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -2406,6 +2503,20 @@ const MissionControl = () => {
                     </div>
                 </div>
             )}
+
+            {/* HIDDEN PERMANENT CAPTURE NODES
+                These must stay mounted at all times. If conditionally mounted, 
+                WebKit/Blink's SVG foreignObject pipeline fails to flush the layout 
+                and renders solid bounding boxes instead of text. 
+            */}
+            <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }} className="print-mode no-dark">
+                <div id="pdf-front-capture" className="bg-white" style={{ width: templateByRole[selectedApp?.user?.role_context]?.orientation === 'landscape' ? 500 : 320, height: templateByRole[selectedApp?.user?.role_context]?.orientation === 'landscape' ? 320 : 500 }}>
+                    {selectedApp?.user && templateByRole[selectedApp.user.role_context] ? <IDCard user={selectedApp.user} template={templateByRole[selectedApp.user.role_context]} side="front" /> : null}
+                </div>
+                <div id="pdf-back-capture" className="bg-white" style={{ width: templateByRole[selectedApp?.user?.role_context]?.orientation === 'landscape' ? 500 : 320, height: templateByRole[selectedApp?.user?.role_context]?.orientation === 'landscape' ? 320 : 500 }}>
+                    {selectedApp?.user && templateByRole[selectedApp.user.role_context] ? <IDCard user={selectedApp.user} template={templateByRole[selectedApp.user.role_context]} side="back" /> : null}
+                </div>
+            </div>
 
             <style>{`
             @keyframes scanSweep {

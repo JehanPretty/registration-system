@@ -320,7 +320,7 @@ function ProfileDetails({ profileAvatar, fileInputRef, userRoles, userData }) {
                 const sectionFieldLabels = new Set();
                 formSections?.forEach(s => s.fields?.forEach(f => sectionFieldLabels.add(f.label)));
                 const extraKeys = Object.keys(editForm.attributes || {}).filter(k => 
-                  !["is_profile_complete", "completed_at", "signature", "id_picture", "signed_up_at", "selfie_verification", "kyc_document", "selfie_document"].includes(k) && !sectionFieldLabels.has(k)
+                  !["is_profile_complete", "completed_at", "signature", "id_picture", "signed_up_at", "selfie_verification", "kyc_document", "selfie_document", "has_applied_for_id", "kyc_pipeline_passed", "physical_id_requested"].includes(k) && !sectionFieldLabels.has(k)
                 );
                 
                 if (extraKeys.length === 0) return null;
@@ -329,7 +329,7 @@ function ProfileDetails({ profileAvatar, fileInputRef, userRoles, userData }) {
                   <div className="p-5 rounded-xl border border-slate-100">
                     <h3 className="text-[10px] font-bold text-[#1a234b] mb-5 flex items-center gap-2">
                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
-                       Address Information
+                       Additional Details
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                       {extraKeys.map(key => (
@@ -519,7 +519,7 @@ function ProfileDetails({ profileAvatar, fileInputRef, userRoles, userData }) {
                   sectionLabels.add(f.label);
                   normalizedSectionKeys.add(getNormalizedKey(f.label));
                 }));
-                const excludedKeys = ["is_profile_complete", "completed_at", "signature", "id_picture", "signed_up_at", "selfie_verification", "kyc_document", "selfie_document"];
+                const excludedKeys = ["is_profile_complete", "completed_at", "signature", "id_picture", "signed_up_at", "selfie_verification", "kyc_document", "selfie_document", "has_applied_for_id", "kyc_pipeline_passed", "physical_id_requested"];
                 const extraKeys = Object.keys(editForm.attributes || {}).filter(k => 
                   !excludedKeys.includes(k) && !sectionLabels.has(k) && !normalizedSectionKeys.has(k)
                 );
@@ -529,7 +529,7 @@ function ProfileDetails({ profileAvatar, fileInputRef, userRoles, userData }) {
                   <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                      <h3 className="text-[11px] font-black text-[#1a234b] tracking-wide uppercase">Address Information</h3>
+                      <h3 className="text-[11px] font-black text-[#1a234b] tracking-wide uppercase">Additional Details</h3>
                       <div className="h-[1px] flex-1 bg-slate-100" />
                     </div>
                     <div className="grid grid-cols-1 mt-2">

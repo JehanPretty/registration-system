@@ -205,31 +205,61 @@ const AddressForm = ({ values = {}, onChange, errors = {}, visibleFields }) => {
         )}
 
         {isFieldVisible("state") && (
-          <SearchableSelect
-            label="Province"
-            placeholder={countryVal ? "Select Province" : "Select country first"}
-            options={states}
-            value={stateVal}
-            onChange={handleStateChange}
-            loading={loading.states}
-            disabled={!countryVal}
-            error={errors[LABEL_MAP.state]}
-          />
+          isPH ? (
+            <SearchableSelect
+              label="Province"
+              placeholder={countryVal ? "Select Province" : "Select country first"}
+              options={states}
+              value={stateVal}
+              onChange={handleStateChange}
+              loading={loading.states}
+              disabled={!countryVal}
+              error={errors[LABEL_MAP.state]}
+            />
+          ) : (
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black text-slate-500 ml-1 tracking-widest">State / Region</label>
+              <input
+                type="text"
+                className={baseInputClasses}
+                placeholder="Enter state or region"
+                value={stateVal}
+                onChange={(e) => handleStateChange(e.target.value)}
+                disabled={!countryVal}
+              />
+              {errors[LABEL_MAP.state] && <p className="text-[9px] font-bold text-red-500 mt-1">{errors[LABEL_MAP.state]}</p>}
+            </div>
+          )
         )}
 
         {isFieldVisible("city") && (
-          <SearchableSelect
-            label="City / Municipality"
-            placeholder={
-              stateVal || isPH ? "Select City/Municipality" : "Select province first"
-            }
-            options={cities}
-            value={cityVal}
-            onChange={handleCityChange}
-            loading={loading.cities}
-            disabled={!stateVal && !isPH}
-            error={errors[LABEL_MAP.city]}
-          />
+          isPH ? (
+            <SearchableSelect
+              label="City / Municipality"
+              placeholder={
+                stateVal ? "Select City/Municipality" : "Select province first"
+              }
+              options={cities}
+              value={cityVal}
+              onChange={handleCityChange}
+              loading={loading.cities}
+              disabled={!stateVal}
+              error={errors[LABEL_MAP.city]}
+            />
+          ) : (
+            <div className="space-y-1">
+              <label className="block text-[10px] font-black text-slate-500 ml-1 tracking-widest">City</label>
+              <input
+                type="text"
+                className={baseInputClasses}
+                placeholder="Enter city"
+                value={cityVal}
+                onChange={(e) => handleCityChange(e.target.value)}
+                disabled={!countryVal}
+              />
+              {errors[LABEL_MAP.city] && <p className="text-[9px] font-bold text-red-500 mt-1">{errors[LABEL_MAP.city]}</p>}
+            </div>
+          )
         )}
       </div>
 

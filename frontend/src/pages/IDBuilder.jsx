@@ -10,6 +10,9 @@ import {
 import { API_BASE_URL } from '../config';
 import IDCard from '../components/IDCard';
 import formalPhoto from '../assets/images/Formal_photo.jpg';
+import Cropper from "react-cropper";
+import "cropperjs/dist/cropper.css";
+import { formatExternalId } from '../utils/idFormatter';
 
 // ── TEMPLATE PRESETS ────────────────────────────────────────
 const templatePresets = [
@@ -34,8 +37,11 @@ const IDBuilder = () => {
     const frontTemplateRef = useRef(null);
     const backTemplateRef = useRef(null);
     const signatureRef = useRef(null);
+    const cropperRef = useRef(null);
     const [removingBg, setRemovingBg] = useState(false);
     const [removingSigBg, setRemovingSigBg] = useState(false);
+    const [cropModalOpen, setCropModalOpen] = useState(false);
+    const [cropImageSrc, setCropImageSrc] = useState(null);
 
     const [template, setTemplate] = useState({
         role_name: "Student",
@@ -80,10 +86,15 @@ const IDBuilder = () => {
 
 
     const [previewUser] = useState({
-        name: "Jehan Macararic",
+        name: "Jehan Perez Macararic",
         role_context: "Student Representative",
         external_id: "STUD-2026-0001",
         avatar_url: formalPhoto,
+        attributes: {
+            "Guardian Full Name": "Guardian Name",
+            "Guardian Address": "Address",
+            "Guardian Mobile Number": "Contact Number"
+        }
     });
 
     useEffect(() => {
@@ -226,72 +237,89 @@ const IDBuilder = () => {
         rawReader.readAsDataURL(file);
     };
 
-    const handleSignatureUpload = async (e) => {
+    const handleSignatureUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        setRemovingSigBg(true);
-        try {
-            // Prefer the same high-quality signature extraction pipeline used during user uploads.
-            const formData = new FormData();
-            formData.append("file", file);
-            const detectRes = await fetch(`${API_BASE_URL}/detect-face/detect-signature`, {
-                method: "POST",
-                body: formData,
-                headers: { "bypass-tunnel-reminder": "true" }
-            });
-            if (detectRes.ok) {
-                const detectData = await detectRes.json();
-                if (detectData?.is_signature && detectData?.processed_url) {
-                    updateTemplate("authorized_signature_url", detectData.processed_url);
-                    message.success("Signature uploaded with instant background removal.");
-                    setRemovingSigBg(false);
-                    e.target.value = "";
-                    return;
-                }
-                if (detectData?.reason) {
-                    message.warning(detectData.reason);
-                    setRemovingSigBg(false);
-                    e.target.value = "";
-                    return;
-                }
-            }
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+            setCropImageSrc(reader.result);
+            setCropModalOpen(true);
+        };
+        reader.readAsDataURL(file);
+        
+        e.target.value = "";
+    };
 
-            // Fallback to local background stripping if the signature endpoint is unavailable.
-            const rawReader = new FileReader();
-            rawReader.onload = async (ev) => {
+    const handleCropConfirm = async () => {
+        if (!cropperRef.current?.cropper) return;
+        setCropModalOpen(false);
+        setRemovingSigBg(true);
+        
+        try {
+            const canvas = cropperRef.current.cropper.getCroppedCanvas();
+            if (!canvas) {
+                setRemovingSigBg(false);
+                return;
+            }
+            
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    setRemovingSigBg(false);
+                    return;
+                }
+                const formData = new FormData();
+                formData.append("file", blob, "signature.png");
+                
                 try {
-                    const transparent = await removeBackground(ev.target.result);
-                    const fetchRes = await fetch(transparent);
-                    const blob = await fetchRes.blob();
-                    const uploadData = new FormData();
-                    uploadData.append("file", blob, "signature.png");
-                    const uploadRes = await fetch(`${API_BASE_URL}/uploads`, {
+                    const detectRes = await fetch(`${API_BASE_URL}/detect-face/detect-signature`, {
                         method: "POST",
-                        body: uploadData,
+                        body: formData,
                         headers: { "bypass-tunnel-reminder": "true" }
                     });
-                    if (uploadRes.ok) {
-                        const data = await uploadRes.json();
-                        updateTemplate("authorized_signature_url", data.file_url);
-                        message.success("Signature uploaded.");
+                    
+                    if (detectRes.ok) {
+                        const detectData = await detectRes.json();
+                        if (detectData?.is_signature && detectData?.processed_url) {
+                            updateTemplate("authorized_signature_url", detectData.processed_url);
+                            message.success("Signature cropped and background removed successfully.");
+                        } else if (detectData?.reason) {
+                            message.warning(detectData.reason);
+                        }
                     } else {
-                        message.error("Failed to upload signature.");
+                        // Fallback to local background removal on cropped canvas if detect fails
+                        const dataUrl = canvas.toDataURL("image/png");
+                        const transparent = await removeBackground(dataUrl);
+                        const fetchRes = await fetch(transparent);
+                        const transparentBlob = await fetchRes.blob();
+                        
+                        const uploadData = new FormData();
+                        uploadData.append("file", transparentBlob, "signature.png");
+                        
+                        const uploadRes = await fetch(`${API_BASE_URL}/uploads`, {
+                            method: "POST",
+                            body: uploadData,
+                            headers: { "bypass-tunnel-reminder": "true" }
+                        });
+                        
+                        if (uploadRes.ok) {
+                            const data = await uploadRes.json();
+                            updateTemplate("authorized_signature_url", data.file_url);
+                            message.success("Signature cropped successfully.");
+                        } else {
+                            message.error("Failed to upload signature after crop.");
+                        }
                     }
                 } catch (err) {
-                    console.error("Signature fallback process failed:", err);
+                    console.error("Signature upload error:", err);
                     message.error("Network error during signature upload.");
                 } finally {
                     setRemovingSigBg(false);
-                    e.target.value = "";
                 }
-            };
-            rawReader.readAsDataURL(file);
-            return;
+            }, "image/png");
         } catch (err) {
-            console.error("Signature process failed:", err);
-            message.error("Network error during signature upload.");
+            console.error("Signature crop error:", err);
             setRemovingSigBg(false);
-            e.target.value = ""; // Reset input
         }
     };
 
@@ -460,6 +488,11 @@ const IDBuilder = () => {
             </div>
         );
     }
+
+    const getPreviewId = (role) => {
+        // use 0001 as the preview counter for the builder
+        return formatExternalId("USER-2026-0001", role);
+    };
 
     return (
         <div className="flex flex-col h-[calc(100vh-52px)] overflow-hidden system-theme-root">
@@ -995,6 +1028,47 @@ const IDBuilder = () => {
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                                <div className="space-y-1 bg-white p-2 border border-slate-100 rounded-lg">
+                                    <div className="flex items-center justify-between mb-1 text-[10px] font-black text-slate-400">
+                                        <label>Issue Date Label</label>
+                                        <input type="checkbox" checked={template.show_issue_date ?? true} onChange={(e) => updateTemplate("show_issue_date", e.target.checked)} className="cursor-pointer" />
+                                    </div>
+                                    <select value={template.issue_date_label || "Issue Date"} onChange={(e) => updateTemplate("issue_date_label", e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] font-black text-slate-600 outline-none focus:border-indigo-400 transition-colors">
+                                        <option value="Issue Date">Issue Date</option>
+                                        <option value="Date Joined">Date Joined</option>
+                                        <option value="Joined">Joined</option>
+                                        <option value="Member Since">Member Since</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1 bg-white p-2 border border-slate-100 rounded-lg">
+                                    <div className="flex items-center justify-between mb-1 text-[10px] font-black text-slate-400">
+                                        <label>Expiry Date Label</label>
+                                        <input type="checkbox" checked={template.show_expiry_date ?? true} onChange={(e) => updateTemplate("show_expiry_date", e.target.checked)} className="cursor-pointer" />
+                                    </div>
+                                    <select value={template.expiry_date_label || "Valid Until"} onChange={(e) => updateTemplate("expiry_date_label", e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[10px] font-black text-slate-600 outline-none focus:border-indigo-400 transition-colors">
+                                        <option value="Valid Until">Valid Until</option>
+                                        <option value="Expires">Expires</option>
+                                        <option value="Expire Date">Expire Date</option>
+                                        <option value="Valid Thru">Valid Thru</option>
+                                        <option value="Expired Date">Expired Date</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {template.show_expiry_date && (
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 mb-1 block">Expiry Date Value (e.g. +3 Years, Fixed Date, or empty)</label>
+                                <input
+                                    type="text"
+                                    value={template.expiry_date_value || ""}
+                                    onChange={(e) => updateTemplate("expiry_date_value", e.target.value)}
+                                    placeholder="Leave empty for auto calculate"
+                                    className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-[12px] font-black text-[#1a234b] outline-none"
+                                />
+                            </div>
+                            )}
+
                             <button
                                 onClick={() => updateTemplate("show_barcode", !template.show_barcode)}
                                 className="w-full flex items-center justify-between px-2.5 py-1.5 bg-white rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors"
@@ -1032,7 +1106,7 @@ const IDBuilder = () => {
                                 FRONT SIDE
                             </div>
                             <div className="relative z-10 transition-transform duration-300 origin-top no-dark" style={{ transform: "scale(0.85)" }}>
-                                <IDCard user={{ ...previewUser, role_context: selectedRole }} template={template} side="front" />
+                                <IDCard user={{ ...previewUser, external_id: getPreviewId(selectedRole), role_context: selectedRole }} template={template} side="front" />
                             </div>
                         </div>
 
@@ -1043,12 +1117,47 @@ const IDBuilder = () => {
                                 BACK SIDE
                             </div>
                             <div className="relative z-10 transition-transform duration-300 origin-top no-dark" style={{ transform: "scale(0.85)" }}>
-                                <IDCard user={{ ...previewUser, role_context: selectedRole }} template={template} side="back" />
+                                <IDCard user={{ ...previewUser, external_id: getPreviewId(selectedRole), role_context: selectedRole }} template={template} side="back" />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {cropModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in zoom-in duration-300">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-white/20">
+                        <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                            <h3 className="font-bold text-[#1a234b]">Adjust Signature</h3>
+                            <button onClick={() => setCropModalOpen(false)} className="text-slate-400 hover:text-red-500 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-4 bg-black/5 relative w-full h-[300px]">
+                            <Cropper
+                                src={cropImageSrc}
+                                style={{ height: "100%", width: "100%" }}
+                                initialAspectRatio={NaN}
+                                guides={true}
+                                ref={cropperRef}
+                                viewMode={1}
+                                dragMode="move"
+                                background={false}
+                                responsive={true}
+                            />
+                        </div>
+                        <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50">
+                            <p className="text-[10px] text-slate-500 font-medium">Use mouse wheel/pinch to zoom. Drag to place.</p>
+                            <div className="flex gap-2">
+                                <button onClick={() => setCropModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors">Cancel</button>
+                                <button onClick={handleCropConfirm} className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center gap-2">
+                                    <Save className="w-3.5 h-3.5" /> Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
